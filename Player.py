@@ -1,11 +1,14 @@
 class Player:
 
-    def __init__(self,card):
-        self.last_card = card
-        self.new_card = None
+    def __init__(self):
+        self.cards = []
+
+    def get_first_card(self, new_card):
+        self.cards.append(new_card)
 
     def play(self,new_card):
-        self.new_card = new_card
+        self.cards.append(new_card)
+        return self.cards.pop()
 
     def __repr__(self):
-        print("%d,%d" %(self.last_card,self.new_card))
+        print(self.cards)
