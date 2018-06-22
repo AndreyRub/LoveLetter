@@ -7,22 +7,22 @@ draw_pile = list(cards)
 random.shuffle(draw_pile)
 discard_pile = list()
 
-player1 = Player()
-player2 = Player()
-#players = [player1,player2]
-player1.get_first_card(draw_pile.pop())
-player2.get_first_card(draw_pile.pop())
+#Discard one card (to avoid exact guessing)
+discard_pile.append( draw_pile.pop())
 
+#Give each player a starting card
+players = [Player(1),Player(2)]
+for player in players:
+    player.get_first_card(draw_pile.pop())
+
+#Play until there are no more cards or only one player stays
 is_game_over = False
 while not is_game_over:
-    drawn_card = draw_pile.pop()
-    played_card_1 = player1.play(drawn_card)
-    discard_pile.append(played_card_1)
-    print("Player 1 played %d" % played_card_1)
-
-    played_card_2 = player2.play(drawn_card)
-    discard_pile.append(played_card_2)
-    print("Player 2 played %d" % played_card_1)
+    for player in players:
+        drawn_card = draw_pile.pop()
+        played_card = player.play(drawn_card)
+        discard_pile.append(played_card)
+        print("Player %d played %d" % (player.name,played_card))
 
     if not draw_pile:
         is_game_over = True
