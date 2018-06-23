@@ -1,0 +1,107 @@
+Overview:
+	Class Card:
+		properties:
+			value: int, range: 1..8
+			description: str, same as in game (for display purposes only)
+				(implemented in __repr__? I think it's not advisable)
+
+		Methods:
+			init: define [value, description] data values
+
+	Class Deck:
+		properties:
+			cards: 	list of Card objects. 
+					order determines next card to draw
+			num_of_unused_cards: int. Defines the deck size which causes the game to end (equivalent to setting aside 1 card or more)
+
+
+		methods:
+			init: 	create Values and descriptions as in game (5 "1"s, 2 "2","3","4","5"s, 1 "6","7","8", etc.)
+					shuffle the cards list (using shuffle() method)
+					set num_of_unused_cards to 1
+			deck_size:	returns number of remaining playable cards (i.e. not including the card(s) set aside)
+			is_empty:	returns True if number of cards remaining is equal to num_of_unused cards
+			shuffle:	shuffles the "cards" list
+			deal_card:	pop one card from the deck and return it. 
+
+
+	Class Player
+
+		properties:
+			name:	defaults to "Player 1/2/3/..." but can be input by users
+			hand:	list of Card objects. Can be of length 1 (out-of-turn) or 2 (during turn)
+			*valid_move:	list of boolean values, length 2. Describes whether each card in hand (hand has 2 cards during the player's turn) can be played
+						Note: this still allows useless / sacrificing moves (e.g. playing a 1 when all players have a 4, or playing the 8 and losing the round). It only serves to avoid playing 5/6 when having the 7.
+
+		methods:
+			init:			get starting hand from Game object
+			show_hand:		show the Game object the player's current card(s)
+							When hand size is 1: it will be checked against a player playing 1, shown to another player playing 2, or compared with a player playing 3
+							When hand size is 2: it will be shown to Game object to ensure move is valid
+			play_card:		discards one card from 2-card hand (given an input index)
+			discard_hand: 	return current card and discard it
+			add_card:		add a card to current hand
+
+
+
+
+
+	Class Game
+
+		properties:
+			deck:			current deck
+			*valid_moves:	a list with valid moves for current player (e.g. [3,4], or [6]).
+							Note: this still allows useless / sacrificing moves (e.g. playing a 1 when all players have a 4, or playing the 8 and losing the round). It only serves to avoid playing 5/6 when having the 7.
+			protection:		list of True/False per each player. Set to True if player is currently protected by a 4
+			discard_pile:	list of all discarded cards
+			players:		list of player object in current game
+			player_status:	list of Booleans for each player status in the game: True: active, False: inactive (out of the round)
+			
+
+
+		methods:
+			init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
+			play:			runs the main game loop until a winner is declared. Returns winner index
+			draw_card:		draw a card from the deck. Returns False if deck is depleted
+			give_player_card: draw a card from the deck and add it to a player's hand.
+			show_discard_pile:	generate a list of how many cards have been discarded so far
+			do_player_turn:	draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
+							Note: if deck is empty, draw_card will return false and decide_winner should be called
+			run_card:		run card logic. Make sure to check for protection. E.g. card==1, prompt for non-protected targets and guesses card value. 					If all targets are protected, do nothing. Compare guess to card value. If matched, remove player from the game.
+								Also: check if princess was forced to be discarded when running 5's logic
+			decide_winner:	returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
+
+
+Main:
+while max(wins) < 4
+	game = Game(num_of_players)
+	winner_idx = game.play()
+	wins[winner_idx] += 1
+# Find winner index
+print(f"{game.players[winner idx].name} wins!")
+
+
+Questions:
+
+Should "active" (i.e. not kicked out) be an internal or external property?
+i.e. should this be:
+	player.is_active
+	or
+	game.player_status - list of Bool
+
+Should "protection" be a Game property, or a Player property?
+i.e. should this be:	
+	game.is_protected[0..num_of_players] - list of Bool
+	or:
+	player.is_protected_ - Bool
+	player.set_protection()
+	player.get_protection
+
+Should the Player interface directly with the Deck, or should the Game be an intermediary?
+i.e. should this be:
+	c = deck.draw_card()
+	player[2].add_card()
+	or:
+	player[2].get_card_from_deck(deck)
+
+*Should the player decide which cards are valid to play? Or should the Game look at the current player's cards and check validity? Or both?
