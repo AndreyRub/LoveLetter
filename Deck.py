@@ -1,6 +1,5 @@
 import random
-import Card
-class Deck:
+from Card import Card
 """
 Class Deck:
 	properties:
@@ -18,6 +17,8 @@ Class Deck:
 		shuffle:	shuffles the "cards" list
 		deal_card:	pop one card from the deck and return it. 
 """
+
+class Deck:
 	def __init__(self, num_of_unused_cards=1):
 		self.num_of_unused_cards = num_of_unused_cards
 
@@ -51,7 +52,7 @@ Class Deck:
 		self.descriptions = descriptions
 		self.cards = cards
 
-		self.shuffle(self)
+		self.shuffle()
 
 	def shuffle(self):
 		# Shuffles the deck. Consider adding a check to only allow this when the deck is full
@@ -63,11 +64,11 @@ Class Deck:
 
 	def is_empty(self):
 		# is_empty:	returns True if number of cards remaining is equal to num_of_unused cards
-		return(deck_size(self) == 0)
+		return(self.deck_size() == 0)
 
 	def deal_card(self):
 		# deal_card:	pop one card from the deck and return it. If deck is empty, return False
-		if is_empty(self):
+		if self.is_empty():
 			return(False)
 		return(self.cards.pop())
 

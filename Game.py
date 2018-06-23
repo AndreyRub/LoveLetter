@@ -1,6 +1,6 @@
-import Deck, Player
+from Player import Player
+from Deck import Deck
 
-class Game:
 # Class Game
 
 # 	properties:
@@ -11,7 +11,6 @@ class Game:
 # 		discard_pile:	list of all discarded cards
 # 		players:		list of player object in current game
 # 		player_status:	list of Booleans for each player status in the game: True: active, False: inactive (out of the round)
-		
 
 
 # 	methods:
@@ -26,11 +25,14 @@ class Game:
 # 		run_card:				run card logic. Make sure to check for protection. E.g. card==1, prompt for non-protected targets and guesses card value. 					If all targets are protected, do nothing. Compare guess to card value. If matched, remove player from the game.
 # 									Also: check if princess was forced to be discarded when running 5's logic
 # 		decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
-	
-	def get_player_name(index):
+
+
+class Game:
+
+	def get_player_name(self,index):
 		return("Player " + str(index))
 
-	def get_validity(hand):
+	def get_validity(self,hand):
 		if hand[0].get_value()==7:
 			if hand[1].get_value() in [5,6]: # [7,5] or [7,6] requires playing the 7
 				return([True,False])
@@ -39,9 +41,9 @@ class Game:
 				return([False,True])
 		return([True, True])
 
-	def get_validity_prompt(hand):
-		validity = get_validity(hand)
-		if all(validity)
+	def get_validity_prompt(self,hand):
+		validity = hand.get_validity()
+		if all(validity):
 			prompt = f"Note: you may any card. Your choice: "
 		else:
 			prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the 7). Your choice: "
@@ -54,7 +56,7 @@ class Game:
 
 		# Get player names / set them to defaults ("Player 1", "Player 2", etc.)
 		if not names:
-			self.player_names = [get_player_name(idx) for idx in range(1,1+num_of_players)]
+			self.player_names = [self.get_player_name(idx) for idx in range(1,1+num_of_players)]
 		else:
 			self.player_names = names
 
@@ -67,13 +69,16 @@ class Game:
 		# Init discard pile
 		self.discard_pile = []
 
-		# Give each player a card
-		[self.give_player_card(self,p) for p in self.players] # Q: are the first 2 "self"s necessary?
-						# REMOVE THIS:
-						# [p.add_card(self.draw_card(self)) for p in self.players] # Q: are the first 2 "self"s necessary?
-						# for p in self.players:
-						# 	card = self.deck.deal_card()
-						# 	p.add_card(card)
+	# Give each player a card
+
+
+		for p in self.players:
+			self.give_player_card(p)  # Q: are the first 2 "self"s necessary?
+		#  REMOVE THIS:
+	# [p.add_card(self.draw_card(self)) for p in self.players] # Q: are the first 2 "self"s necessary?
+	# for p in self.players:
+	# 	card = self.deck.deal_card()
+	# 	p.add_card(card)
 
 
 	def draw_card(self):
@@ -82,7 +87,7 @@ class Game:
 
 	def give_player_card(self,player):
 		# give_player_card: draw a card from the deck and add it to a player's hand.
-		card = self.draw_card(self)
+		card = self.draw_card()
 		return player.add_card(card)
 
 	def add_to_discard_pile(self,card):
@@ -98,22 +103,22 @@ class Game:
 		print(dp_verbose)
 		return(dp_verbose)
 
-# 		play:					runs the main game loop until a winner is declared. Returns winner index
-# 		do_player_turn:			draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
-# 									Note: if deck is empty, draw_card will return false and decide_winner should be called
-# 		run_card:				run card logic. Make sure to check for protection. E.g. card==1, prompt for non-protected targets and guesses card value.
-# 								If all targets are protected, do nothing. Compare guess to card value. If matched, remove player from the game.
-# 									Also: check if princess was forced to be discarded when running 5's logic
-# 		decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
+	# 		play:					runs the main game loop until a winner is declared. Returns winner index
+	# 		do_player_turn:			draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
+	# 									Note: if deck is empty, draw_card will return false and decide_winner should be called
+	# 		run_card:				run card logic. Make sure to check for protection. E.g. card==1, prompt for non-protected targets and guesses card value.
+	# 								If all targets are protected, do nothing. Compare guess to card value. If matched, remove player from the game.
+	# 									Also: check if princess was forced to be discarded when running 5's logic
+	# 		decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
 
 	def prompt_player_for_input(self,player):
 		name = player.show_name()
 		hand = player.show_hand()
 		prompt = f"{name}, this is your hand:\n1:{hand[0].get_description()}\n2:{hand[1].get_description()}\nChoose your card to play.\n"
-		validity_prompt = get_validity_prompt(hand)
+		validity_prompt = hand.get_validity_prompt()
 		return(prompt+validity_prompt)
 
 	def do_player_turn(self,player):
-# 		do_player_turn:			draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
-# 									Note: if deck is empty, draw_card will return false and decide_winner should be called
+		# 		do_player_turn:			draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
+		# 									Note: if deck is empty, draw_card will return false and decide_winner should be called
 		self.give_player_card(self,player)

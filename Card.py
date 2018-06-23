@@ -1,4 +1,3 @@
-class Card:
 """
 Class Card:
 	properties:
@@ -9,6 +8,8 @@ Class Card:
 	Methods:
 		init: define [value, description] data values
 """
+class Card:
+
 	def __init__(self, value, description):
 		self.value = value
 		self.description = description
