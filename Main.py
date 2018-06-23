@@ -19,10 +19,11 @@ for player in players:
 is_game_over = False
 while not is_game_over:
     for player in players:
+        if not draw_pile:
+            is_game_over = True
+            break
         drawn_card = draw_pile.pop()
         played_card = player.play(drawn_card)
         discard_pile.append(played_card)
         print("Player %d played %d" % (player.name,played_card))
 
-    if not draw_pile:
-        is_game_over = True
