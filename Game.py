@@ -127,7 +127,7 @@ class Game:
     def do_next_player_turn(self):
         # 		do_player_turn:			remove protection, draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
         # 									Note: if deck is empty, draw_card will return false and decide_winner should be called
-        self.disable_protection(self.current_player_index)
+        print(self.disable_protection(self.current_player_index))
 
         current_player = self.players[self.current_player_index]
         new_hand = self.give_player_card(
