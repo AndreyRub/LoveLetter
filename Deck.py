@@ -1,23 +1,22 @@
 import random
-import Card
+from Card import Card
 class Deck:
-"""
-Class Deck:
-	properties:
-		cards: 	list of Card objects. 
-				order determines next card to draw
-		num_of_unused_cards: int. Defines the deck size which causes the game to end (equivalent to setting aside 1 card or more)
+# Class Deck:
+# 	properties:
+# 		cards: 	list of Card objects.
+# 				order determines next card to draw
+# 		num_of_unused_cards: int. Defines the deck size which causes the game to end (equivalent to setting aside 1 card or more)
+#
+#
+# 	methods:
+# 		init: 	create Values and descriptions as in game (5 "1"s, 2 "2","3","4","5"s, 1 "6","7","8", etc.)
+# 				shuffle the cards list (using shuffle() method)
+# 				set num_of_unused_cards to 1
+# 		deck_size:	returns number of remaining playable cards (i.e. not including the card(s) set aside)
+# 		is_empty:	returns True if number of cards remaining is equal to num_of_unused cards
+# 		shuffle:	shuffles the "cards" list
+# 		deal_card:	pop one card from the deck and return it.
 
-
-	methods:
-		init: 	create Values and descriptions as in game (5 "1"s, 2 "2","3","4","5"s, 1 "6","7","8", etc.)
-				shuffle the cards list (using shuffle() method)
-				set num_of_unused_cards to 1
-		deck_size:	returns number of remaining playable cards (i.e. not including the card(s) set aside)
-		is_empty:	returns True if number of cards remaining is equal to num_of_unused cards
-		shuffle:	shuffles the "cards" list
-		deal_card:	pop one card from the deck and return it. 
-"""
 	def __init__(self, num_of_unused_cards=1):
 		self.num_of_unused_cards = num_of_unused_cards
 
@@ -25,7 +24,7 @@ Class Deck:
 		descriptions = ['Guard(5) - Guess a player\'s hand',
 						'Courtier(2) - Look at a hand',
 						'Diplomat(2) - Compare hands',
-						'Shugenja(2) - Protecion until your next turn',
+						'Shugenja(2) - Protection until your next turn',
 						'Hatamoto(2) - One player discards his or her hand',
 						'Manipulator(1) - Trade hands',
 						'Sensei(1) - Discard if caught with Manipulator or Hatamoto',
@@ -51,7 +50,7 @@ Class Deck:
 		self.descriptions = descriptions
 		self.cards = cards
 
-		self.shuffle(self)
+		self.shuffle()
 
 	def shuffle(self):
 		# Shuffles the deck. Consider adding a check to only allow this when the deck is full
@@ -63,13 +62,16 @@ Class Deck:
 
 	def is_empty(self):
 		# is_empty:	returns True if number of cards remaining is equal to num_of_unused cards
-		return(deck_size(self) == 0)
+		return(self.deck_size() == 0)
 
 	def deal_card(self):
 		# deal_card:	pop one card from the deck and return it. If deck is empty, return False
-		if is_empty(self):
+		if self.is_empty():
 			return(False)
 		return(self.cards.pop())
+
+	def show_descriptions(self):
+		return('\n'.join([str(i+1) + " - " + self.descriptions[i] for i in range(len(self.descriptions))]))
 
 
 

@@ -1,14 +1,13 @@
 class Card:
-"""
-Class Card:
-	properties:
-		value: int, range: 1..8
-		description: str, same as in game (for display purposes only)
-			(implemented in __repr__? I think it's not advisable)
+# Class Card:
+# 	properties:
+# 		value: int, range: 1..8
+# 		description: str, same as in game (for display purposes only)
+# 			(implemented in __repr__? I think it's not advisable)
+#
+# 	Methods:
+# 		init: define [value, description] data values
 
-	Methods:
-		init: define [value, description] data values
-"""
 	def __init__(self, value, description):
 		self.value = value
 		self.description = description
