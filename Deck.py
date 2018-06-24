@@ -17,18 +17,41 @@ class Deck:
 # 		shuffle:	shuffles the "cards" list
 # 		deal_card:	pop one card from the deck and return it.
 
-	def __init__(self, num_of_unused_cards=1):
+	def get_descriptions(self,cards_style="Japanese"):
+		if cards_style=="Japanese":
+			descriptions = ['Guard(5) - Guess a player\'s hand',
+							'Courtier(2) - Look at a hand',
+							'Diplomat(2) - Compare hands',
+							'Shugenja(2) - Protection until your next turn',
+							'Hatamoto(2) - One player discards his or her hand',
+							'Manipulator(1) - Trade hands',
+							'Sensei(1) - Discard if caught with Manipulator or Hatamoto',
+							'Princess(1) - Lose if discarded']
+		elif cards_style=="Batman":
+			descriptions = ['Batman(5) - Guess a player\'s hand',
+							'Catwoman(2) - Look at a hand',
+							'Bane(2) - Compare hands',
+							'Robin(2) - Protection until your next turn',
+							'Poison Ivy(2) - One player discards his or her hand',
+							'Two Face(1) - Trade hands',
+							'Harley Quinn(1) - Discard if caught with Manipulator or Hatamoto',
+							'Joker(1) - Lose if discarded']
+		elif cards_style=="Classic":
+			descriptions = ['Guard(5) - Guess a player\'s hand',
+							'Priest(2) - Look at a hand',
+							'Baron(2) - Compare hands',
+							'Handmaiden(2) - Protection until your next turn',
+							'Prince(2) - One player discards his or her hand',
+							'King(1) - Trade hands',
+							'Countess(1) - Discard if caught with Manipulator or Hatamoto',
+							'Princess(1) - Lose if discarded']
+		return descriptions
+
+	def __init__(self, num_of_unused_cards=1,cards_style = "Japanese"):
 		self.num_of_unused_cards = num_of_unused_cards
 
 		# Create cards as per the game (5 "1"s, 2 "2","3","4","5"s, 1 "6","7","8", etc.)
-		descriptions = ['Guard(5) - Guess a player\'s hand',
-						'Courtier(2) - Look at a hand',
-						'Diplomat(2) - Compare hands',
-						'Shugenja(2) - Protection until your next turn',
-						'Hatamoto(2) - One player discards his or her hand',
-						'Manipulator(1) - Trade hands',
-						'Sensei(1) - Discard if caught with Manipulator or Hatamoto',
-						'Princess(1) - Lose if discarded']
+		descriptions = self.get_descriptions(cards_style)
 		cards =[Card(1,descriptions[0]),
 				Card(1,descriptions[0]),
 				Card(1,descriptions[0]),

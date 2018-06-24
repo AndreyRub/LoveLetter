@@ -66,7 +66,7 @@ class Game:
                 return (selected_card)
             print('\n*** Invalid value. Try again...\n')
 
-    def __init__(self, num_of_players, names=None):
+    def __init__(self, num_of_players, names=None , cards_style = "Japanese"):
         # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
         if not num_of_players in range(2, 5):
             print("Number of players must be between 2 and 4")
@@ -88,7 +88,7 @@ class Game:
         self.winners = []
 
         # Init the deck
-        self.deck = Deck()
+        self.deck = Deck(cards_style=cards_style)
 
         # Init discard pile
         self.discard_pile = []
