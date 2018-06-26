@@ -82,7 +82,7 @@ class Game:
 
     def prompt_player_for_input(self, player):
         name = player.get_name()
-        hand = player.show_hand()
+        hand = player.get_hand()
         card_values = [card.get_value() for card in hand]
         prompt = f"{name}, this is your hand:\n1: Value: {card_values[0]}, {hand[0].get_description()}\n2: Value: {card_values[1]}, {hand[1].get_description()}\nChoose your card to play.\n"
         validity = Game.get_validity(hand)
@@ -146,12 +146,12 @@ class Game:
         if sum(self.player_active_status) == 1:
             return('Game over - 1 player remaining')
         elif self.deck.is_empty():
-            card_desc = [(f"{self.players[i].show_hand()[0].get_value()} - " + \
-                         f"{self.players[i].show_hand()[0].get_description()}")
+            card_desc = [(f"{self.players[i].get_hand()[0].get_value()} - " + \
+                          f"{self.players[i].get_hand()[0].get_description()}")
                          * self.player_active_status[i] for i in range(self.num_of_players)
-                         if self.players[i].show_hand()]
+                         if self.players[i].get_hand()]
             player_names = [self.players[i].get_name() * self.player_active_status[i] for i in
-                           range(self.num_of_players) if self.players[i].show_hand()]
+                            range(self.num_of_players) if self.players[i].get_hand()]
             final_state = [' - '.join([a,b]) for (a,b) in zip(player_names, card_desc)]
             return(f'Game over - deck is depleted. Current active players\' hands:\n'+'\n'.join(final_state))
         return (False)
@@ -220,7 +220,7 @@ class Game:
     def set_player_lose(self, index):
         # Set a player status to "lose"
         self.player_active_status[index] = False
-        if self.players[index].show_hand(): # If player had just played the princess, their hand is empty
+        if self.players[index].get_hand(): # If player had just played the princess, their hand is empty
             self.add_to_discard_pile(self.players[index].play_card())
 
         return (f"{self.players[self.current_player_index].get_name()} loses and is out of the game.")
@@ -233,8 +233,8 @@ class Game:
         # Performs the actual logic behind each played card
         current_player = self.players[active_player_index]
         opponent = self.players[opponent_index]
-        current_player_card = current_player.show_hand()[0]
-        opponent_card = opponent.show_hand()[0]
+        current_player_card = current_player.get_hand()[0]
+        opponent_card = opponent.get_hand()[0]
         current_player_name = current_player.get_name()
         opponent_name = opponent.get_name()
         current_player_value = current_player_card.get_value()
@@ -338,8 +338,8 @@ class Game:
     def decide_winner(self):
         # decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
 
-        remaining_players = [ self.players[i] for i in range(self.num_of_players) if self.players[i].show_hand() and self.player_active_status[i] ]
-        remaining_card_values = [p.show_hand()[0].get_value() for p in remaining_players]
+        remaining_players = [self.players[i] for i in range(self.num_of_players) if self.players[i].get_hand() and self.player_active_status[i]]
+        remaining_card_values = [p.get_hand()[0].get_value() for p in remaining_players]
         winners = [remaining_players[i] for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
 
         return(winners)

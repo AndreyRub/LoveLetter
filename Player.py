@@ -46,7 +46,7 @@ class Player:
             return(None)
 
 
-    def show_hand(self):
+    def get_hand(self):
         # show_hand:      show the caller the player's current card(s)
         #                 When hand size is 1: it will be checked against a player playing 1, shown to another player playing 2, or compared with a player playing 3
         #                 When hand size is 2: it will be shown to Game object to ensure move is valid
