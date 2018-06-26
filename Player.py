@@ -16,10 +16,13 @@ class Player:
 #         play_card:      discards one card from 2-card hand (given an input index)
 #         add_card:       add a card to current hand
 
-    def __init__(self, name='Player'+str(random.randint(10000,99999))):
+    def __init__(self, input_method, name='Player'+str(random.randint(10000,99999))):
         # init:           just initialize the name and hand data members
+        #                 input_method is an object of child class of InputMethodInterface,
+        #                   which holds the "get_player_input" logic function
         self.hand = []
         self.name = name
+        self.input_method = input_method
 
     def __repr__(self):
         print(self.hand)

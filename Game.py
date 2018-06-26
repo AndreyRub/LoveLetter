@@ -1,7 +1,7 @@
 from Deck import Deck
 from Card import Card
 from Player import Player
-
+from RequestInfo import RequestInfo
 
 class Game:
     # Class Game
@@ -51,23 +51,9 @@ class Game:
             prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the 7). Your choice: "
         return prompt
 
-    def prompt_player_for_input(self, player):
-        name = player.show_name()
-        hand = player.show_hand()
-        card_values = [card.get_value() for card in hand]
-        prompt = f"{name}, this is your hand:\n1: Value: {card_values[0]}, {hand[0].get_description()}\n2: Value: {card_values[1]}, {hand[1].get_description()}\nChoose your card to play.\n"
-        validity = Game.get_validity(hand)
-        validity_prompt = Game.get_validity_prompt(hand)
-        while True:
-            selection = input(prompt + validity_prompt)
-            if isinstance(selection, str) and int(selection) in [1, 2] and validity[int(selection) - 1]:
-                selected_card = player.play_card(int(selection) - 1)
-                self.add_to_discard_pile(selected_card)
-                return (selected_card)
-            print('\n*** Invalid value. Try again...\n')
-
-    def __init__(self, num_of_players, names=None , cards_style = "Japanese"):
+    def __init__(self, players_list, cards_style = "Japanese"):
         # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
+        num_of_players = len(players_list)
         if not num_of_players in range(2, 5):
             print("Number of players must be between 2 and 4")
             return (None)
@@ -75,13 +61,10 @@ class Game:
         self.num_of_players = num_of_players
 
         # Get player names / set them to defaults ("Player 1", "Player 2", etc.)
-        if not names:
-            self.player_names = [Game.default_player_name(idx) for idx in range(1, 1 + num_of_players)]
-        else:
-            self.player_names = names
+        self.player_names = [players_list[i].get_name() if players_list[i].get_name() else Game.default_player_name(i+1) for i in range(num_of_players)]
 
         # Init all players
-        self.players = [Player(n) for n in self.player_names]
+        self.players = [Player(player_logic, name) for (player_logic, name) in zip(players_list, self.player_names)]
         self.player_active_status = [True] * self.num_of_players
         self.current_player_index = 0
         self.protected = [False] * self.num_of_players
@@ -96,11 +79,26 @@ class Game:
         # Give each player a card
         [self.give_player_card(p) for p in self.players]
 
-    # REMOVE THIS:
-    # [p.add_card(self.draw_card(self)) for p in self.players] # Q: are the first 2 "self"s necessary?
-    # for p in self.players:
-    # 	card = self.deck.deal_card()
-    # 	p.add_card(card)
+
+    def prompt_player_for_input(self, player):
+        name = player.show_name()
+        hand = player.show_hand()
+        card_values = [card.get_value() for card in hand]
+        prompt = f"{name}, this is your hand:\n1: Value: {card_values[0]}, {hand[0].get_description()}\n2: Value: {card_values[1]}, {hand[1].get_description()}\nChoose your card to play.\n"
+        validity = Game.get_validity(hand)
+        validity_prompt = Game.get_validity_prompt(hand)
+        full_prompt = prompt + validity_prompt
+        request_info = RequestInfo(human_string=full_prompt, action_requested='card')
+        while True:
+            # selection = input(prompt + validity_prompt)
+            selection = player.input_method.get_player_input(request_info)
+            if isinstance(selection, int) and selection in [1, 2] and validity[selection - 1]:
+                selected_card = player.play_card(int(selection) - 1)
+                self.add_to_discard_pile(selected_card)
+                return (selected_card)
+            request_info.invalid_moves += [selection]
+            print('\n*** Invalid value. Try again...\n')
+
 
     def draw_card(self):
         # draw_card:		draw a card from the deck. Returns False if deck is depleted
@@ -172,19 +170,25 @@ class Game:
         if all([self.protected[i] for i in opponent_indices]):
             return(-1)
 
-
         protection_str = ['', '(Protected)']
 
-        current_player_name = self.players[self.current_player_index].show_name()
+        current_player = self.players[self.current_player_index]
+        current_player_name = current_player.show_name()
         prompt_str_1 = f"{current_player_name}, select your target:\n"
         prompt_str_2 = '\n'.join([f"{i+1} - {self.players[i].show_name()} {protection_str[self.protected[i]]}" for i in opponent_indices])
+        prompt_str = prompt_str_1 + prompt_str_2 + '\n'
+        request_info = RequestInfo(human_string=prompt_str, action_requested='opponent')
         while True:
-            index = input(prompt_str_1 + prompt_str_2 + "\n")
+
+            # index = input(prompt_str_1 + prompt_str_2 + "\n")
+            index = current_player.input_method.get_player_input(request_info)
+
             try:
                 val = int(index)
                 if val-1 in opponent_indices:
                     if self.protected[val-1]:
                         print("That player is protected. Choose another player")
+                        request_info.invalid_moves += [index]
                     else:
                         return (val-1)
             finally:
@@ -195,12 +199,22 @@ class Game:
         if all([self.protected[i] for i in self.get_opponent_indices()]):
             return(-1)
 
+        current_player = self.players[self.current_player_index]
+
         prompt_str_1 = f"Guess the card (2 or higher):\n"
         prompt_str_2 = self.deck.show_descriptions()
+        prompt_str = prompt_str_1 + prompt_str_2 + '\n'
+        request_info = RequestInfo(human_string=prompt_str, action_requested='guess')
+
         while True:
-            index = int(input(prompt_str_1 + prompt_str_2 + "\n"))
+
+            # index = int(input(prompt_str_1 + prompt_str_2 + "\n"))
+            index = current_player.input_method.get_player_input(request_info)
+
             if index in range(2, 9):
                 return index
+
+            request_info.invalid_moves += [index]
             print(f"** Incorrect value entered ({index}), try again: **")
 
     def set_player_lose(self, index):
@@ -323,12 +337,11 @@ class Game:
 
     def decide_winner(self):
         # decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
+
         remaining_players = [ self.players[i] for i in range(self.num_of_players) if self.players[i].show_hand() and self.player_active_status[i] ]
         remaining_card_values = [p.show_hand()[0].get_value() for p in remaining_players]
         winners = [remaining_players[i] for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
-        # card_values = [self.players[i].show_hand()[0].get_value() * self.player_active_status[i]  for i in
-        #                range(self.num_of_players) if self.players[i].show_hand()]
-        # winners = [self.players[i] for i, x in enumerate(card_values) if x == max(card_values)]
+
         return(winners)
 
     def play(self):

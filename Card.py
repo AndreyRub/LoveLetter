@@ -3,7 +3,6 @@ class Card:
 # 	properties:
 # 		value: int, range: 1..8
 # 		description: str, same as in game (for display purposes only)
-# 			(implemented in __repr__? I think it's not advisable)
 #
 # 	Methods:
 # 		init: define [value, description] data values

@@ -1,4 +1,89 @@
-Overview:
+Add InputMethod object as property of Player class
+    Player object will provide Game object with InputMethod object as a means of getting the next move
+
+in love_letter.py, initialize all input_methods (start with all Human, then make some HardCoded), and send the list to Game
+
+
+
+    Class RequestInfo:  Kind-of-container (?) class for a bunch of game state and history data.
+                        ** I'm not even sure this is the best method of passing it to InputMethod **
+
+
+    Class InputMethodInterface:
+
+        properties:
+
+
+
+        methods:
+            get_player_input(request_info): used for Game object to request player input during player's turn.
+
+                    request_info: action requested, game state and history. TBD. For now:
+                        human-readable string (will be printed for Human object)
+                        action requested (card + index of card / opponent / guess)
+                        player's current hand
+                        discard pile
+                        list of player moves
+                        players' active status (active / lost)
+                        players' protection status (protected / not protected)
+                        invalid moves (optional) - an assist from Game
+                    function returns:
+                        played_move: player move, one of:
+                            [card_played, card_played_index] - ([int,int], value of card played: <1..8> and index: <1 or 2>)
+                            opponent (int, index of opponent card is directed at. value: 1..4. Defaults to 0 - will trigger an error if used)
+                            guess (int, index of card guessed during a Guard move. value: 2..8. Defaults to 0 - will trigger an error if used)
+
+    Class InputHuman(InputMethodInterface):
+        properties:
+            None
+
+        methods:
+            init:   <does nothing>
+            get_player_input(request_info): Prints the human-readable string and prompts the human for input.
+                    function returns:
+                        played_move: int value as inputted by human from keyboard
+
+    Class InputComputerHardCoded(InputMethodInterface):
+        properties:
+            output_sequence: a hard-coded output sequence. Used for hard-coded unit tests with non-random decks. E.g. [1,2,6,2,2,4,1,...]
+            state: current position in the output_sequence
+
+                Note: this class can be used for each player separately, or as the same class for all 4 players
+
+        methods:
+            init:   sets output_sequence from input at creation. Sets state to 0
+            get_player_input(request_info): loads current sequence value, updates the state index and returns the sequence value
+                    function returns:
+                        played_move: int value as per current sequence value
+
+*** OPTION 1 for defining computer AI ***
+
+    Class InputComputerAI(InputMethod):
+        properties:
+            state: TBD. Used in logic for deciding next stage. May not be needed.
+            logic: a function to override get_player_input
+                    Consider: use a PlayerLogic object with run_logic() method to enable type testing
+
+        methods:
+            init(logic): loads logic into self.logic
+            get_player_input(request_info): runs self.logic(request_info) and returns value
+                    Consider:  self.logic.run_logic(request_info)
+
+
+    Computer bots will all be of class ComputerAI, and playerLogic objects will be designed separately
+
+*** OPTION 2 for defining computer AI ***
+
+    Class InputComputerAI1(InputMethod):
+    Class InputComputerAI2(InputMethod):
+    Class InputComputerAI3(InputMethod):
+
+    Each InputComputerAI_XX class will have the logic directly programmed into its get_player_input() method
+
+
+
+
+
 	Class Card:
 		properties:
 			value: int, range: 1..8
