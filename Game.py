@@ -51,9 +51,9 @@ class Game:
             prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the 7). Your choice: "
         return prompt
 
-    def __init__(self, players_list, cards_style = "Japanese", shuffle_order=[]):
+    def __init__(self, input_methods_list, cards_style ="Japanese", shuffle_order=[]):
         # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
-        num_of_players = len(players_list)
+        num_of_players = len(input_methods_list)
         if not num_of_players in range(2, 5):
             print("Number of players must be between 2 and 4")
             return (None)
@@ -61,10 +61,10 @@ class Game:
         self.num_of_players = num_of_players
 
         # Get player names / set them to defaults ("Player 1", "Player 2", etc.)
-        self.player_names = [players_list[i].get_name() if players_list[i].get_name() else Game.default_player_name(i+1) for i in range(num_of_players)]
+        self.player_names = [input_methods_list[i].get_name() if input_methods_list[i].get_name() else Game.default_player_name(i + 1) for i in range(num_of_players)]
 
         # Init all players
-        self.players = [Player(player_logic, name) for (player_logic, name) in zip(players_list, self.player_names)]
+        self.players = [Player(player_logic, name) for (player_logic, name) in zip(input_methods_list, self.player_names)]
         self.player_active_status = [True] * self.num_of_players
         self.current_player_index = 0
         self.protected = [False] * self.num_of_players
