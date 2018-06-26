@@ -52,7 +52,7 @@ class Player:
         #                 When hand size is 2: it will be shown to Game object to ensure move is valid
         return(self.hand)
 
-    def show_name(self):
+    def get_name(self):
         return(self.name)
 
 

@@ -51,7 +51,7 @@ class Game:
             prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the 7). Your choice: "
         return prompt
 
-    def __init__(self, players_list, cards_style = "Japanese"):
+    def __init__(self, players_list, cards_style = "Japanese", shuffle_order=[]):
         # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
         num_of_players = len(players_list)
         if not num_of_players in range(2, 5):
@@ -71,7 +71,7 @@ class Game:
         self.winners = []
 
         # Init the deck
-        self.deck = Deck(cards_style=cards_style)
+        self.deck = Deck(cards_style=cards_style,shuffle_order=shuffle_order)
 
         # Init discard pile
         self.discard_pile = []
@@ -81,7 +81,7 @@ class Game:
 
 
     def prompt_player_for_input(self, player):
-        name = player.show_name()
+        name = player.get_name()
         hand = player.show_hand()
         card_values = [card.get_value() for card in hand]
         prompt = f"{name}, this is your hand:\n1: Value: {card_values[0]}, {hand[0].get_description()}\n2: Value: {card_values[1]}, {hand[1].get_description()}\nChoose your card to play.\n"
