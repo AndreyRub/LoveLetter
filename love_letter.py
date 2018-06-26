@@ -12,7 +12,7 @@ players_list = [k for k in human_players]
 game = Game(players_list)
 winners = game.play()
 if len(winners) == 1:
-    print(f"And the winner is: {winners[0].show_name()}!")
+    print(f"And the winner is: {winners[0].get_name()}!")
 else:
     strs = ", ".join([w.get_name() for w in winners])
     print(f"And the winners are: {strs}!")

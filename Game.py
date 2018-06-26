@@ -150,7 +150,7 @@ class Game:
                          f"{self.players[i].show_hand()[0].get_description()}")
                          * self.player_active_status[i] for i in range(self.num_of_players)
                          if self.players[i].show_hand()]
-            player_names = [self.players[i].show_name() * self.player_active_status[i] for i in
+            player_names = [self.players[i].get_name() * self.player_active_status[i] for i in
                            range(self.num_of_players) if self.players[i].show_hand()]
             final_state = [' - '.join([a,b]) for (a,b) in zip(player_names, card_desc)]
             return(f'Game over - deck is depleted. Current active players\' hands:\n'+'\n'.join(final_state))
@@ -173,9 +173,9 @@ class Game:
         protection_str = ['', '(Protected)']
 
         current_player = self.players[self.current_player_index]
-        current_player_name = current_player.show_name()
+        current_player_name = current_player.get_name()
         prompt_str_1 = f"{current_player_name}, select your target:\n"
-        prompt_str_2 = '\n'.join([f"{i+1} - {self.players[i].show_name()} {protection_str[self.protected[i]]}" for i in opponent_indices])
+        prompt_str_2 = '\n'.join([f"{i+1} - {self.players[i].get_name()} {protection_str[self.protected[i]]}" for i in opponent_indices])
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
         request_info = RequestInfo(human_string=prompt_str, action_requested='opponent')
         while True:
@@ -223,7 +223,7 @@ class Game:
         if self.players[index].show_hand(): # If player had just played the princess, their hand is empty
             self.add_to_discard_pile(self.players[index].play_card())
 
-        return (f"{self.players[self.current_player_index].show_name()} loses and is out of the game.")
+        return (f"{self.players[self.current_player_index].get_name()} loses and is out of the game.")
 
     def run_logic(self, active_player_index, opponent_index, played_card_value, guessed_value=0):
         # Quick check for all-opponents-protected scenario
@@ -235,8 +235,8 @@ class Game:
         opponent = self.players[opponent_index]
         current_player_card = current_player.show_hand()[0]
         opponent_card = opponent.show_hand()[0]
-        current_player_name = current_player.show_name()
-        opponent_name = opponent.show_name()
+        current_player_name = current_player.get_name()
+        opponent_name = opponent.get_name()
         current_player_value = current_player_card.get_value()
         opponent_value = opponent_card.get_value()
 
@@ -286,14 +286,14 @@ class Game:
 
     def enable_protection(self, player_index):
         # Set protection to player
-        current_player_name = self.players[player_index].show_name()
+        current_player_name = self.players[player_index].get_name()
         self.protected[player_index] = True
         return (f"{current_player_name} is now protected")
 
     def disable_protection(self, player_index):
         # Remove protection from player
         if self.protected[player_index]:
-            current_player_name = self.players[player_index].show_name()
+            current_player_name = self.players[player_index].get_name()
             self.protected[player_index] = False
             return (f"{current_player_name} is no longer protected")
         return ("")
@@ -311,7 +311,7 @@ class Game:
 
         elif selection == 7:  # Sensei - do nothing
 
-            output_str = f"{self.players[self.current_player_index].show_name()} discards a card value of {selected_card.get_description()}. Nothing happens."
+            output_str = f"{self.players[self.current_player_index].get_name()} discards a card value of {selected_card.get_description()}. Nothing happens."
 
         elif selection == 4:
 
