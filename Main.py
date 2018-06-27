@@ -1,18 +1,28 @@
-from InputHuman import InputHuman
-
 from Game import Game
 from InputHuman import InputHuman
-num_of_players = 4
+from InputComputerHardCoded import InputComputerHardCoded
+from build_scenarios import build_scenarios
 
-human_players = [InputHuman("Player " + str(k)) for k in range(1,num_of_players+1)]
+# Build all game scenarios
+scenarios = build_scenarios()
 
-# Set all players as Human
-players_list = [k for k in human_players]
+# CHOOSE A GAME SCENARIO
+# scenario = scenarios['humans'] # All players are Human
+# scenario = scenarios['humans-unshuffled'] # All players are Human, specific deck order - [1, 1, 1, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 8] (8 is out)
+scenario = scenarios['hard_coded'] # all players are hard-coded, same (1) InputMethod object for all inputs
 
-game = Game(players_list,cards_style="Classic")
+
+# Construct the game
+game = Game(scenario)
+
+# Run game and get results (winners - list of Player objects)
 winners = game.play()
+
+
 if len(winners) == 1:
     print(f"And the winner is: {winners[0].get_name()}!")
 else:
     strs = ", ".join([w.get_name() for w in winners])
     print(f"And the winners are: {strs}!")
+
+print(f"Game record:\n{game.get_game_record()}")

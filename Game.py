@@ -48,30 +48,48 @@ class Game:
         if all(validity):
             prompt = f"Note: you may play any card. Your choice: "
         else:
-            prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the 7). Your choice: "
+            prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the {hand[validity.index(True)].get_value()}. Your choice: "
         return prompt
 
-    def __init__(self, input_methods_list, cards_style ="Japanese", shuffle_order=[]):
-        # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
-        num_of_players = len(input_methods_list)
+    def header_prompt(str):
+        stars = "*" * len(str) + "\n"
+        return("\n" + stars + str + "\n" + stars + "\n")
+
+    def __init__(self, scenario):
+
+        # Load data from scenario
+        input_methods_list  = scenario.get_input_methods_list()
+        cards_style         = scenario.get_card_style()
+        deck_order          = scenario.get_deck_order()
+        shuffle_mode        = scenario.get_deck_shuffle_mode()
+        num_of_players = scenario.get_num_of_players()
+
         if not num_of_players in range(2, 5):
             print("Number of players must be between 2 and 4")
             return (None)
 
+        # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
         self.num_of_players = num_of_players
 
         # Get player names / set them to defaults ("Player 1", "Player 2", etc.)
-        self.player_names = [input_methods_list[i].get_name() if input_methods_list[i].get_name() else Game.default_player_name(i + 1) for i in range(num_of_players)]
+        self.player_names = [f"{Game.default_player_name(i + 1)} ({input_methods_list[i].get_name()})" for i in range(num_of_players)]
 
         # Init all players
-        self.players = [Player(player_logic, name) for (player_logic, name) in zip(input_methods_list, self.player_names)]
-        self.player_active_status = [True] * self.num_of_players
-        self.current_player_index = 0
-        self.protected = [False] * self.num_of_players
-        self.winners = []
+        self.players                = [Player(player_logic, name) for (player_logic, name) in zip(input_methods_list, self.player_names)]
+        self.player_active_status   = [True] * self.num_of_players
+        self.current_player_index   = 0
+        self.protected              = [False] * self.num_of_players
+        self.winners                = []
+
+        # Init current turn number (start at 1)
+        self.current_turn_number = 1
+
+        # Init game record
+        self.game_record = [] # Tuples of (turn, player, move, description)
 
         # Init the deck
-        self.deck = Deck(cards_style=cards_style,shuffle_order=shuffle_order)
+        self.deck = Deck(cards_style=cards_style,deck_order=deck_order,shuffle_mode=shuffle_mode)
+        self.deck_for_debug = [c.get_value() for c in self.deck.cards_]
 
         # Init discard pile
         self.discard_pile = []
@@ -83,8 +101,13 @@ class Game:
     def prompt_player_for_input(self, player):
         name = player.get_name()
         hand = player.get_hand()
+        new_line = '\n'
         card_values = [card.get_value() for card in hand]
-        prompt = f"{name}, this is your hand:\n1: Value: {card_values[0]}, {hand[0].get_description()}\n2: Value: {card_values[1]}, {hand[1].get_description()}\nChoose your card to play.\n"
+        prompt = Game.header_prompt(f"Turn #{self.current_turn_number}, {name}\'s turn:") + \
+                                 f"{name}, this is your hand:" + new_line + new_line + \
+                                 f"1: Value: {card_values[0]}, {hand[0].get_description()}" + new_line + \
+                                 f"2: Value: {card_values[1]}, {hand[1].get_description()}" + new_line + new_line + \
+                                 f"Choose your card to play.\n"
         validity = Game.get_validity(hand)
         validity_prompt = Game.get_validity_prompt(hand)
         full_prompt = prompt + validity_prompt
@@ -93,12 +116,24 @@ class Game:
             # selection = input(prompt + validity_prompt)
             selection = player.input_method.get_player_input(request_info)
             if isinstance(selection, int) and selection in [1, 2] and validity[selection - 1]:
+                hand_vals = [c.get_value() for c in player.get_hand()]
                 selected_card = player.play_card(int(selection) - 1)
                 self.add_to_discard_pile(selected_card)
+                out_string = f"{name} selects option {selection}: card value: {selected_card.get_value()} - {selected_card.get_description()}"
+                self.record_move(selection, description=out_string, hand=hand_vals)
                 return (selected_card)
             request_info.invalid_moves += [selection]
             print('\n*** Invalid value. Try again...\n')
 
+
+    def record_move(self, move, description = '',hand=[0,0]):
+        turn = self.current_turn_number
+        player = self.players[self.current_player_index]
+        self.game_record.append({'turn'        : turn,
+                                 'player'      : player,
+                                 'hand'        : hand,
+                                 'move'        : move,
+                                 'description' : description})
 
     def draw_card(self):
         # draw_card:		draw a card from the deck. Returns False if deck is depleted
@@ -141,6 +176,7 @@ class Game:
         while not self.player_active_status[next_index]:
             next_index = (next_index + 1) % self.num_of_players
         self.current_player_index = next_index
+        self.current_turn_number += 1
 
     def is_game_over(self):
         if sum(self.player_active_status) == 1:
@@ -155,6 +191,26 @@ class Game:
             final_state = [' - '.join([a,b]) for (a,b) in zip(player_names, card_desc)]
             return(f'Game over - deck is depleted. Current active players\' hands:\n'+'\n'.join(final_state))
         return (False)
+
+    def get_game_record(self):
+
+        out_string = f"Move list - full version:\n"
+
+        out_string += "{:<10}{:<40}{:<10}{:<10}{:<40}\n".format('Turn', 'Player', 'Hand', 'Move', 'Description')
+        out_string += "-"*130 + '\n'
+
+        for r in self.game_record:
+            s1 = r['turn']
+            s2 = r['player'].get_name()
+            s3 = f"{r['hand']}"
+            s4 = r['move']
+            s5 = r['description']
+
+            out_string += "{:<10}{:<40}{:<10}{:<10}{:<40}\n".format(s1,s2,s3,s4,s5)
+
+        out_string += f"\nMove list - short version:\nDeck:{self.deck_for_debug}\nMoves:{[r['move'] for r in self.game_record]}"
+
+        return(out_string)
 
     def get_opponent_indices(self):
         # These are the displayed indices (start from 1). Used indices start from 0
@@ -180,11 +236,15 @@ class Game:
         request_info = RequestInfo(human_string=prompt_str, action_requested='opponent')
         while True:
 
-            # index = input(prompt_str_1 + prompt_str_2 + "\n")
             index = current_player.input_method.get_player_input(request_info)
 
             try:
                 val = int(index)
+                output_str = (f"{current_player_name} selects player index {index} ({self.players[index-1].get_name()})")
+                print(output_str)
+                hand_vals = [c.get_value() for c in current_player.get_hand()]
+                self.record_move(index, description=output_str, hand=hand_vals)
+
                 if val-1 in opponent_indices:
                     if self.protected[val-1]:
                         print("That player is protected. Choose another player")
@@ -200,8 +260,9 @@ class Game:
             return(-1)
 
         current_player = self.players[self.current_player_index]
+        current_player_name = current_player.get_name()
 
-        prompt_str_1 = f"Guess the card (2 or higher):\n"
+        prompt_str_1 = f"{current_player_name}, guess the card (2 or higher):\n"
         prompt_str_2 = self.deck.show_descriptions()
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
         request_info = RequestInfo(human_string=prompt_str, action_requested='guess')
@@ -210,6 +271,11 @@ class Game:
 
             # index = int(input(prompt_str_1 + prompt_str_2 + "\n"))
             index = current_player.input_method.get_player_input(request_info)
+            output_str = f"{current_player_name} guesses card value of: {index}"
+            hand_vals = [c.get_value() for c in current_player.get_hand()]
+            self.record_move(index, description=output_str, hand=hand_vals)
+
+            print(output_str)
 
             if index in range(2, 9):
                 return index

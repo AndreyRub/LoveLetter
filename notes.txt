@@ -1,3 +1,9 @@
+Implement discard_pile display (add option of input "d" at user prompt
+Implement hard-coded input method
+    Generate some example games with a fixed sequence, record the sequence + player inputs
+
+
+
 Add InputMethod object as property of Player class
     Player object will provide Game object with InputMethod object as a means of getting the next move
 
