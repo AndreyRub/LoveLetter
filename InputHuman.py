@@ -21,4 +21,7 @@ class InputHuman(InputMethodInterface):
 
             request_data = request_info.get_request_info()
             user_input = input(request_data['human_string'])
-            return(int(user_input))
+            try:
+                return(int(user_input))
+            except:
+                return(user_input)

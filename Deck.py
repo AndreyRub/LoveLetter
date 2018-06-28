@@ -71,7 +71,7 @@ class Deck:
         if self.shuffle_mode == 'random':
             random.shuffle(self.cards_)
         elif self.shuffle_mode == 'random_seed':
-            random.seed(seed)
+            random.seed(seedsss)
             random.shuffle(self.cards_)
         elif (self.shuffle_mode == 'deck_order') and (len(self.deck_order) == len(self.cards_)):
             self.cards_ = [self.cards_[ind] for ind in self.deck_order]

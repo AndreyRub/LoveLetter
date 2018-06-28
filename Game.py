@@ -122,8 +122,11 @@ class Game:
                 out_string = f"{name} selects option {selection}: card value: {selected_card.get_value()} - {selected_card.get_description()}"
                 self.record_move(selection, description=out_string, hand=hand_vals)
                 return (selected_card)
-            request_info.invalid_moves += [selection]
-            print('\n*** Invalid value. Try again...\n')
+            elif selection == 'd':
+                self.show_discard_pile()
+            else:
+                request_info.invalid_moves += [selection]
+                print('\n*** Invalid value. Try again...\n')
 
 
     def record_move(self, move, description = '',hand=[0,0]):
@@ -149,11 +152,25 @@ class Game:
         self.discard_pile.append(card)
 
     def show_discard_pile(self):
-        # show_discard_pile:	generate a list of how many cards have been discarded so far of each card type
+        # show_discard_pile:	generate a dictionary of how many cards have been discarded so far of each card type
+        # dict format: {card value (1-8) :  [#discarded, #total, card description]}
 
-        dp_verbose = dict(self.deck.descriptions, [0] * len(self.deck.descriptions))
+        num_of_cards_per_value = self.deck.get_num_of_cards_per_type()
+        card_values = list(num_of_cards_per_value.keys())
+        nums = list(num_of_cards_per_value.values())
+        dp_list = {card_values[i] : [0, nums[i], self.deck.descriptions[i]] for i in range(len(nums))}
+
         for card in self.discard_pile:
-            dp_verbose[card.get_description()] += 1
+            dp_list[card.get_value()][0] += 1
+
+        dp_verbose = Game.header_prompt('Discard pile')
+
+        format_str = "{:<8}{:<13}{:<10}{:<40}\n"
+        dp_verbose += format_str.format('Value', '# discarded', '# in deck', 'Description')
+        dp_verbose += "-"*130 + '\n'
+        for v in card_values:
+            dp_verbose += format_str.format(v, dp_list[v][0], dp_list[v][1], dp_list[v][2])
+
         print(dp_verbose)
         return (dp_verbose)
 
