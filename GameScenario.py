@@ -1,4 +1,5 @@
-from InputHuman import InputHuman
+from InputMethod import InputMethod
+from PlayLogicHuman import PlayLogicHuman
 
 class GameScenario:
     # Simply a container for the game scenario.
@@ -12,7 +13,12 @@ class GameScenario:
     def __init__(self,
                  title = 'Game scenario',
                  num_of_players = 4,
-                 input_methods_list = [InputHuman(f'Player {k+1}') for k in range(1,5)],
+
+                 input_methods_list=[InputMethod(name="Human",
+                                                 play_logic=PlayLogicHuman(name='XXX'),
+                                                 print_request=False)
+                                     for k in range(1, 4 + 1)],
+
                  deck_order = [],
                  deck_shuffle_mode='shuffle',
                  seed = [],

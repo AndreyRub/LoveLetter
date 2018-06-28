@@ -1,3 +1,7 @@
+Pass information about other players' actions and knowledge (for example: have they played the 7? Have they looked at my hand?)
+Check case where last move is a 5, a player discards his card but cannot draw another one from the deck (it's empty)
+
+
 Implement discard_pile display (add option of input "d" at user prompt
 Implement hard-coded input method
     Generate some example games with a fixed sequence, record the sequence + player inputs

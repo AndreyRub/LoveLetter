@@ -103,15 +103,17 @@ class Game:
         hand = player.get_hand()
         new_line = '\n'
         card_values = [card.get_value() for card in hand]
+        dp_list, dp_verbose = self.show_discard_pile()
         prompt = Game.header_prompt(f"Turn #{self.current_turn_number}, {name}\'s turn:") + \
                                  f"{name}, this is your hand:" + new_line + new_line + \
                                  f"1: Value: {card_values[0]}, {hand[0].get_description()}" + new_line + \
                                  f"2: Value: {card_values[1]}, {hand[1].get_description()}" + new_line + new_line + \
+                                 f"d: Show discard pile" + new_line + new_line + \
                                  f"Choose your card to play.\n"
         validity = Game.get_validity(hand)
         validity_prompt = Game.get_validity_prompt(hand)
         full_prompt = prompt + validity_prompt
-        request_info = RequestInfo(human_string=full_prompt, action_requested='card')
+        request_info = RequestInfo(human_string=full_prompt, action_requested='card', discard_pile=dp_list)
         while True:
             # selection = input(prompt + validity_prompt)
             selection = player.input_method.get_player_input(request_info)
@@ -123,7 +125,7 @@ class Game:
                 self.record_move(selection, description=out_string, hand=hand_vals)
                 return (selected_card)
             elif selection == 'd':
-                self.show_discard_pile()
+                print(dp_verbose)
             else:
                 request_info.invalid_moves += [selection]
                 print('\n*** Invalid value. Try again...\n')
@@ -171,8 +173,7 @@ class Game:
         for v in card_values:
             dp_verbose += format_str.format(v, dp_list[v][0], dp_list[v][1], dp_list[v][2])
 
-        print(dp_verbose)
-        return (dp_verbose)
+        return dp_list, dp_verbose
 
     def do_next_player_turn(self):
         # 		do_player_turn:			remove protection, draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic

@@ -1,7 +1,8 @@
-from InputHuman import InputHuman
-from InputComputerHardCoded import InputComputerHardCoded
-from GameScenario import GameScenario
-from Deck import Deck
+from InputMethod        import InputMethod
+from PlayLogicHardCoded import PlayLogicHardCoded
+from PlayLogicHuman     import PlayLogicHuman
+from GameScenario       import GameScenario
+from Deck               import Deck
 
 def find_order_from_sequence(initial_sequence, new_sequence):
     initial_temp = initial_sequence + [None]
@@ -41,73 +42,51 @@ def build_scenarios():
 
     scenarios = {} # This will be a dictionary of GameScenario objects. Keys are the scenario names
 
+
     # Scenario 1 - all players are Human
+
     scenarios['humans'] = GameScenario(
         title               = 'All players are Human',
         num_of_players      = num_of_players,
-        input_methods_list  = [InputHuman(name="Human") for k in range(1,num_of_players+1)],
+        input_methods_list  = [InputMethod(name="Human", play_logic=PlayLogicHuman(name='XXX'), print_request=False) for k in range(1,num_of_players+1)],
         deck_order          = [], # Shuffled
         deck_shuffle_mode   = 'random',
         seed                = 0,
         card_style          = card_style)
 
+    # Scenario 1 - all players are Human
 
-    # Scenario 2 - all players are Human, deck is un-shuffled
     scenarios['humans-unshuffled'] = GameScenario(
-        title               = f'All players are Human, deck is {decks_list[0]}',
-        num_of_players      = num_of_players,
-        input_methods_list  = [InputHuman(name="Human") for k in range(1,num_of_players+1)],
-        deck_order          = find_order_from_sequence(initial_sequence, decks_and_moves_lists[0]['deck']),
-        deck_shuffle_mode   = 'deck_order',
-        seed                = 0,
-        card_style          = card_style)
+        title='All players are Human, deck is unshuffled',
+        num_of_players=num_of_players,
+        input_methods_list=[InputMethod(name="Human", play_logic=PlayLogicHuman(name='XXX'), print_request=False) for
+                            k in range(1, num_of_players + 1)],
+        deck_order=find_order_from_sequence(initial_sequence = initial_sequence,
+                                            new_sequence = decks_and_moves_lists[2]['deck']),
+        deck_shuffle_mode='deck_order',
+        seed=0,
+        card_style=card_style)
 
+    # Scenario 3 - all players are hard-coded, deck and moves are taken from decks_and_moves_lists:
+    #       input method: ONE OBJECT FOR ALL INPUTS
 
-    # Scenario 3 - all players are hard-coded:
-    #       input method: one object for all inputs
-    #       deck order - un-shuffled (option 0)
-    scenarios['hard_coded'] = GameScenario(
+    decks_and_moves_lists_index = 0
+    input_computer_hardcoded = InputMethod(name="Computer - HardCoded (same)",
+                                             play_logic=PlayLogicHardCoded(
+                                                 moves_list=decks_and_moves_lists[decks_and_moves_lists_index]['moves']),
+                                             print_request=True)
+    scenarios['hard_coded1'] = GameScenario(
         title        =
             f"""Scenario 3 - all players are hard-coded.
             Input method: one object for all inputs.
             Deck order - {deck_order}""",
         num_of_players      = num_of_players,
-        input_methods_list  = [InputComputerHardCoded(name="Computer - HardCoded (same)", moves_list=decks_and_moves_lists[0]['moves'])] * num_of_players,
-        deck_order          = find_order_from_sequence(initial_sequence, decks_and_moves_lists[0]['deck']),
+        input_methods_list  = [input_computer_hardcoded] * num_of_players,
+        deck_order          = find_order_from_sequence(initial_sequence = initial_sequence,
+                                                       new_sequence = decks_and_moves_lists[decks_and_moves_lists_index]['deck']),
         deck_shuffle_mode   = 'deck_order',
         seed                = 0,
         card_style          = card_style)
 
-# Scenario 4 - all players are hard-coded:
-#       input method: one object for all inputs
-#       deck order - un-shuffled (option 0)
-    scenarios['hard_coded2'] = GameScenario(
-        title        =
-            f"""Scenario 4 - all players are hard-coded.
-            Input method: one object for all inputs.
-            Deck order - {deck_order}""",
-        num_of_players      = num_of_players,
-        input_methods_list  = [InputComputerHardCoded(name="Computer - HardCoded (same)",
-                                                      moves_list=decks_and_moves_lists[1]['moves'])] * num_of_players,
-        deck_order          = find_order_from_sequence(initial_sequence, decks_and_moves_lists[1]['deck']),
-        deck_shuffle_mode   = 'deck_order',
-        seed                = 0,
-        card_style          = card_style)
-
-# Scenario 5 - all players are hard-coded:
-#       input method: one object for all inputs
-#       deck order - sequence 3 [1, 5, 5, 1, 1, 1, 8, 2, 4, 4, 3, 1, 6, 2, 3, 7]
-    scenarios['hard_coded3'] = GameScenario(
-        title=
-        f"""Scenario 4 - all players are hard-coded.
-        Input method: one object for all inputs.
-        Deck order - {deck_order}""",
-        num_of_players      = num_of_players,
-        input_methods_list  = [InputComputerHardCoded(  name="Computer - HardCoded (same)",
-                                                        moves_list=decks_and_moves_lists[2]['moves'])] * num_of_players,
-        deck_order          = find_order_from_sequence(initial_sequence, decks_and_moves_lists[2]['deck']),
-        deck_shuffle_mode   = 'deck_order',
-        seed                = 0,
-        card_style          = card_style)
 
     return(scenarios)
