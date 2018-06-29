@@ -7,7 +7,8 @@ class RequestInfo:
                  move_history = [],                 # list of player moves
                  players_active_status = [],        # players' active status (active / lost)
                  players_protection_status = [],    # players' protection status (protected / not protected)
-                 invalid_moves = []):               # invalid moves (optional) - an assist from Game
+                 invalid_moves = [],                # invalid moves (optional) - an assist from Game
+                 valid_moves = []):                # valid moves (optional) - an assist from Game
 
         self.human_string = human_string
         self.action_requested = action_requested
@@ -17,6 +18,7 @@ class RequestInfo:
         self.players_active_status = players_active_status
         self.players_protection_status = players_protection_status
         self.invalid_moves = invalid_moves
+        self.valid_moves = valid_moves
 
     def get_request_info(self):
         return ({'human_string'              : self.human_string,
@@ -26,7 +28,8 @@ class RequestInfo:
 				 'move_history'              : self.move_history,
 				 'players_active_status'     : self.players_active_status,
 				 'players_protection_status' : self.players_protection_status,
-				 'invalid_moves'             : self.invalid_moves})
+				 'invalid_moves'             : self.invalid_moves,
+                 'valid_moves'               : self.valid_moves})
 
 
 

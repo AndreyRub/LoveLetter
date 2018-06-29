@@ -5,22 +5,43 @@ from build_scenarios import build_scenarios
 scenarios = build_scenarios()
 
 # CHOOSE A GAME SCENARIO
-# scenario = scenarios['humans'] # All players are Human
-# scenario = scenarios['humans-unshuffled'] # All players are Human, specific deck order - [8, 7, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1, 1, 1, 1] (8 is out)
-scenario = scenarios['hard_coded1'] # all players are hard-coded, same (1) InputMethod object for all inputs
+
+# scenario = scenarios['Humans_only']            # All players are Human
+scenario = scenarios['AI_4_random']                 # AI player - random selection for AI bot
+# scenario = scenarios['AI_3_random_1_random2'] # 3 Random AIs, 1 "Random2" AI
+# scenario = scenarios['AI_4_random2']         # 4 Random2 AIs
+# scenario = scenarios['hard_coded1']         # Hard coded - need to un-comment from build_scenarios.py
 
 
-# Construct the game
-game = Game(scenario)
-
-# Run game and get results (winners - list of Player objects)
-winners = game.play()
 
 
-if len(winners) == 1:
-    print(f"And the winner is: {winners[0].get_name()}!")
-else:
-    strs = ", ".join([w.get_name() for w in winners])
-    print(f"And the winners are: {strs}!")
+# # Construct the game
+# game = Game(scenario)
+#
+# # Run a single game and get results (winners - list of Player objects)
+# winners, winners_idx = game.play()
+#
+# if len(winners) == 1:
+#     str = Game.header_prompt(f"And the winner is: {winners[0].get_name()}!")
+# else:
+#     strs = ", ".join([w.get_name() for w in winners])
+#     str = Game.header_prompt(f"And the winners are: {strs}!")
+#
+# print(str)
+#
+# print(f"Game record:\n{game.get_game_record()}")
 
-print(f"Game record:\n{game.get_game_record()}")
+
+
+
+
+
+# Run multiple games (with same scenario) using AI and get statistics
+wins_count = [0]*scenario.num_of_players
+for k in range(3000):
+    winners, winners_idx = Game(scenario).play()
+    for w in winners_idx:
+        wins_count[w] += 1
+
+print('Wins count:')
+print(list(enumerate([0]+wins_count))[1:])

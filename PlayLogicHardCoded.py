@@ -20,8 +20,6 @@ class PlayLogicHardCoded:
 
         InputMethodInterface.check_request_info_type(request_info)
 
-        print(request_info.get_request_info()['human_string'])
-
         try:
             return (next(self.moves_list))
         except StopIteration:

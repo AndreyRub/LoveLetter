@@ -60,18 +60,20 @@ class Deck:
             for j in range(0,num_of_cards):
                 cards.append( Card(card_type,descriptions[card_type-1]) )
 
-        self.descriptions = descriptions
-        self.cards_ = cards
-        self.deck_order = deck_order
-        self.shuffle_mode = shuffle_mode
+        self.descriptions   = descriptions
+        self.cards_         = cards
+        self.deck_order     = deck_order
+        self.shuffle_mode   = shuffle_mode
+        self.seed           = seed
         self.shuffle()
 
     def shuffle(self):
         # Shuffles the deck. Consider adding a check to only allow this when the deck is full
+
         if self.shuffle_mode == 'random':
             random.shuffle(self.cards_)
         elif self.shuffle_mode == 'random_seed':
-            random.seed(seedsss)
+            random.seed(self.seed)
             random.shuffle(self.cards_)
         elif (self.shuffle_mode == 'deck_order') and (len(self.deck_order) == len(self.cards_)):
             self.cards_ = [self.cards_[ind] for ind in self.deck_order]

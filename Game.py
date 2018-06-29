@@ -2,6 +2,8 @@ from Deck import Deck
 from Card import Card
 from Player import Player
 from RequestInfo import RequestInfo
+import random
+from time import time
 
 class Game:
     # Class Game
@@ -87,8 +89,11 @@ class Game:
         # Init game record
         self.game_record = [] # Tuples of (turn, player, move, description)
 
+        # Input a random seed (system-time based) to the random module. Can be overridden later with a different seed value
+        random.seed(time())
+
         # Init the deck
-        self.deck = Deck(cards_style=cards_style,deck_order=deck_order,shuffle_mode=shuffle_mode)
+        self.deck = Deck(cards_style=cards_style,deck_order=deck_order,shuffle_mode=shuffle_mode, seed=scenario.get_seed())
         self.deck_for_debug = [c.get_value() for c in self.deck.cards_]
 
         # Init discard pile
@@ -112,8 +117,13 @@ class Game:
                                  f"Choose your card to play.\n"
         validity = Game.get_validity(hand)
         validity_prompt = Game.get_validity_prompt(hand)
+        valid_moves = [i+1 for (i,x) in enumerate(validity) if x]
         full_prompt = prompt + validity_prompt
-        request_info = RequestInfo(human_string=full_prompt, action_requested='card', discard_pile=dp_list)
+        request_info = RequestInfo(human_string=full_prompt,
+                                   action_requested='card',
+                                   discard_pile=dp_list,
+                                   current_hand=hand,
+                                   valid_moves=valid_moves)
         while True:
             # selection = input(prompt + validity_prompt)
             selection = player.input_method.get_player_input(request_info)
@@ -122,6 +132,7 @@ class Game:
                 selected_card = player.play_card(int(selection) - 1)
                 self.add_to_discard_pile(selected_card)
                 out_string = f"{name} selects option {selection}: card value: {selected_card.get_value()} - {selected_card.get_description()}"
+                print("\n" + out_string)
                 self.record_move(selection, description=out_string, hand=hand_vals)
                 return (selected_card)
             elif selection == 'd':
@@ -167,11 +178,11 @@ class Game:
 
         dp_verbose = Game.header_prompt('Discard pile')
 
-        format_str = "{:<8}{:<13}{:<10}{:<40}\n"
-        dp_verbose += format_str.format('Value', '# discarded', '# in deck', 'Description')
+        format_str = "{:<8}{:<13}{:<10}{:<10}{:<40}\n"
+        dp_verbose += format_str.format('Value', '# discarded', '# in play', '# in deck', 'Description')
         dp_verbose += "-"*130 + '\n'
         for v in card_values:
-            dp_verbose += format_str.format(v, dp_list[v][0], dp_list[v][1], dp_list[v][2])
+            dp_verbose += format_str.format(v, dp_list[v][0], dp_list[v][1]-dp_list[v][0], dp_list[v][1], dp_list[v][2])
 
         return dp_list, dp_verbose
 
@@ -251,7 +262,10 @@ class Game:
         prompt_str_1 = f"{current_player_name}, select your target:\n"
         prompt_str_2 = '\n'.join([f"{i+1} - {self.players[i].get_name()} {protection_str[self.protected[i]]}" for i in opponent_indices])
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
-        request_info = RequestInfo(human_string=prompt_str, action_requested='opponent')
+        valid_moves = [i+1 for i in opponent_indices if not self.protected[i]]
+        request_info = RequestInfo(human_string=prompt_str,
+                                   action_requested='opponent',
+                                   valid_moves=valid_moves)
         while True:
 
             index = current_player.input_method.get_player_input(request_info)
@@ -283,7 +297,12 @@ class Game:
         prompt_str_1 = f"{current_player_name}, guess the card (2 or higher):\n"
         prompt_str_2 = self.deck.show_descriptions()
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
-        request_info = RequestInfo(human_string=prompt_str, action_requested='guess')
+        valid_moves = list(range(2,9))
+        request_info = RequestInfo(human_string=prompt_str,
+                                   action_requested='guess',
+                                   valid_moves=valid_moves,
+                                   discard_pile=self.show_discard_pile()[0],
+                                   current_hand=current_player.get_hand())
 
         while True:
 
@@ -357,6 +376,10 @@ class Game:
             if discarded_card_value == 8:
                 self.set_player_lose(opponent_index)
                 return (f"{opponent_name} discards a Princess and loses this round")
+            if self.deck.is_empty():
+                self.set_player_lose(opponent_index)
+                return (f"Deck is empty - {opponent_name} cannot take a new card and loses this round")
+
             new_card = self.draw_card()
             opponent.add_card(new_card)
             return (f"{opponent_name} discards a card value of {discarded_card_value} and draws a new card")
@@ -395,7 +418,7 @@ class Game:
 
         elif selection == 7:  # Sensei - do nothing
 
-            output_str = f"{self.players[self.current_player_index].get_name()} discards a card value of {selected_card.get_description()}. Nothing happens."
+            output_str = f"{self.players[self.current_player_index].get_name()} discards a card value of {selected_card.get_value()}. Nothing happens."
 
         elif selection == 4:
 
@@ -425,8 +448,9 @@ class Game:
         remaining_players = [self.players[i] for i in range(self.num_of_players) if self.players[i].get_hand() and self.player_active_status[i]]
         remaining_card_values = [p.get_hand()[0].get_value() for p in remaining_players]
         winners = [remaining_players[i] for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
+        winners_indices = [i for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
 
-        return(winners)
+        return(winners, winners_indices)
 
     def play(self):
         # play:					runs the main game loop until a winner is declared. Returns winner index

@@ -1,9 +1,18 @@
 TODO:
-Pass list of allowed moves. This will make designing a "stupid" computer easier.
-Pass information about other players' actions and knowledge (for example: have they played the 7? Have they looked at my hand?)
-Check case where last move is a 5, a player discards his card but cannot draw another one from the deck (it's empty)
+
+AI: When playing the Guard (1), only choose cards that are not completely out of the game. Base this on the discard pile + AI's current hand
+
+Pass information about other players' actions and knowledge. For example:
+    have they played the 7?
+    Have they looked at my hand?
+    Have I looked at theirs?
+    Have we swapped cards?
 
 Done:
+Check case where last move is a 5, a player discards his card but cannot draw another one from the deck (it's empty)
+Add printout of (computer) player's selection at each stage
+Fix randomization <bug?> - seems to not shuffle differently even though requested to
+Pass list of allowed moves. This will make designing a "stupid" computer easier.
 Implement discard_pile display (add option of input "d" at user prompt
 Implement hard-coded input method
     Generate some example games with a fixed sequence, record the sequence + player inputs

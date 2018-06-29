@@ -39,7 +39,7 @@ class InputMethod():
     def get_player_input(self, request_info):
         # Sends the given RequestInfo object to the PlayLogic object to receive the player's next move
 
-        self.check_request_info_type(request_info)
+        InputMethod.check_request_info_type(request_info)
 
         if self.print_request:
             print(request_info.get_request_info()['human_string'])
