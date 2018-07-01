@@ -10,9 +10,9 @@ def input_human_player(name = "Human"):
     input_method = InputMethod(name=name, play_logic=PlayLogicHuman(name='XXX'), print_request=False)
     return(input_method)
 
-def input_computer_player_quiet(ai_type='random2'):
+def input_computer_player_quiet(ai_type='random2', player_idx=None):
     computer_player = InputMethod(name=f"Computer - AI ({ai_type})",
-                                           play_logic=PlayLogicAI(ai_type=ai_type, seed=2),
+                                           play_logic=PlayLogicAI(ai_type=ai_type, seed=2, player_index=player_idx),
                                            print_request=False)
     return(computer_player)
 
@@ -216,12 +216,18 @@ def build_scenarios():
 
     # Scenario generator
     hp = [input_human_player(name = 'Human') for k in range(4)]
-    cp_ai1 = [input_computer_player_quiet(ai_type='random') for k in range(4)]
-    cp_ai2 = [input_computer_player_quiet(ai_type='random2') for k in range(4)]
+    cp_ai1 = [input_computer_player_quiet(ai_type='random', player_idx=k) for k in range(4)]
+    cp_ai2 = [input_computer_player_quiet(ai_type='random2', player_idx=k) for k in range(4)]
+    cp_ai3 = [input_computer_player_quiet(ai_type='simple_logic', player_idx=k) for k in range(4)]
 
     scenarios['Humans_only']            = test_scenario(hp)
     scenarios['AI_4_random']            = test_scenario(cp_ai1)
-    scenarios['AI_3_random_1_random2']  = test_scenario(cp_ai1[:-1] + [cp_ai2[0]])
+    scenarios['AI_3_random_1_random2']  = test_scenario(cp_ai1[:-1] + [cp_ai2[-1]])
+    scenarios['AI_1_random2_3_random1'] = test_scenario(cp_ai2[:-1] + [cp_ai1[-1]])
     scenarios['AI_4_random2']           = test_scenario(cp_ai2)
+    scenarios['human_vs_3_AI_random2']  = test_scenario([hp[0]] + cp_ai2[1:])
+    scenarios['AI_4_simple_logic'] = test_scenario(cp_ai3)
+    scenarios['human_vs_3_AI_simple_logic'] = test_scenario([hp[0]] + cp_ai3[1:])
+
 
     return(scenarios)

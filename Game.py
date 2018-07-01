@@ -3,6 +3,7 @@ from Card import Card
 from Player import Player
 from RequestInfo import RequestInfo
 import random
+import play_logic_infra
 from time import time
 
 class Game:
@@ -57,7 +58,7 @@ class Game:
         stars = "*" * len(str) + "\n"
         return("\n" + stars + str + "\n" + stars + "\n")
 
-    def __init__(self, scenario):
+    def __init__(self, scenario, print_moves=False):
 
         # Load data from scenario
         input_methods_list  = scenario.get_input_methods_list()
@@ -71,6 +72,13 @@ class Game:
             return (None)
 
         # init:			init the deck, init all players, give each 1 card. Input: number of players + names (optional)
+
+        # Set whether to print out each player's chosen move and its effect.
+        # Note: this can also be printed from each player's InputMethod object,
+        #       through its play_logic property (especially for the PlayLogicHuman object)
+        self.print_moves = print_moves
+
+        # Set number of players
         self.num_of_players = num_of_players
 
         # Get player names / set them to defaults ("Player 1", "Player 2", etc.)
@@ -87,7 +95,7 @@ class Game:
         self.current_turn_number = 1
 
         # Init game record
-        self.game_record = [] # Tuples of (turn, player, move, description)
+        self.game_record = [] # List of dicts of (turn, player, move, description)
 
         # Input a random seed (system-time based) to the random module. Can be overridden later with a different seed value
         random.seed(time())
@@ -98,9 +106,15 @@ class Game:
 
         # Init discard pile
         self.discard_pile = []
+        dp_list, dp_verbose = self.show_discard_pile()
 
         # Give each player a card
         [self.give_player_card(p) for p in self.players]
+
+        # Update each player's input_method's state with the new discard_pile information
+        for player_idx in range(len(self.players)):
+            self.players[player_idx].input_method.play_logic.init_hand_options(self.players[player_idx].get_hand(),dp_list)
+
 
 
     def prompt_player_for_input(self, player):
@@ -118,12 +132,16 @@ class Game:
         validity = Game.get_validity(hand)
         validity_prompt = Game.get_validity_prompt(hand)
         valid_moves = [i+1 for (i,x) in enumerate(validity) if x]
+        players_active = self.player_active_status
+        players_protected = self.protected
         full_prompt = prompt + validity_prompt
         request_info = RequestInfo(human_string=full_prompt,
                                    action_requested='card',
                                    discard_pile=dp_list,
                                    current_hand=hand,
-                                   valid_moves=valid_moves)
+                                   valid_moves=valid_moves,
+                                   players_active=players_active,
+                                   players_protected=players_protected)
         while True:
             # selection = input(prompt + validity_prompt)
             selection = player.input_method.get_player_input(request_info)
@@ -132,7 +150,8 @@ class Game:
                 selected_card = player.play_card(int(selection) - 1)
                 self.add_to_discard_pile(selected_card)
                 out_string = f"{name} selects option {selection}: card value: {selected_card.get_value()} - {selected_card.get_description()}"
-                print("\n" + out_string)
+                if self.print_moves:
+                    print("\n" + out_string)
                 self.record_move(selection, description=out_string, hand=hand_vals)
                 return (selected_card)
             elif selection == 'd':
@@ -187,7 +206,8 @@ class Game:
         return dp_list, dp_verbose
 
     def do_next_player_turn(self):
-        # 		do_player_turn:			remove protection, draw a card and give it to a player, show user both cards + discard pile, ask for input, check validity, run card logic
+        # 		do_player_turn:			remove protection, draw a card and give it to a player, show user both cards
+        #                               (+ discard pile), ask for input, check validity, run card logic
         # 									Note: if deck is empty, draw_card will return false and decide_winner should be called
         print(self.disable_protection(self.current_player_index))
 
@@ -263,9 +283,14 @@ class Game:
         prompt_str_2 = '\n'.join([f"{i+1} - {self.players[i].get_name()} {protection_str[self.protected[i]]}" for i in opponent_indices])
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
         valid_moves = [i+1 for i in opponent_indices if not self.protected[i]]
+        players_active = self.player_active_status
+        players_protected = self.protected
         request_info = RequestInfo(human_string=prompt_str,
                                    action_requested='opponent',
-                                   valid_moves=valid_moves)
+                                   valid_moves=valid_moves,
+                                   players_active=players_active,
+                                   players_protected=players_protected)
+
         while True:
 
             index = current_player.input_method.get_player_input(request_info)
@@ -273,7 +298,8 @@ class Game:
             try:
                 val = int(index)
                 output_str = (f"{current_player_name} selects player index {index} ({self.players[index-1].get_name()})")
-                print(output_str)
+                if self.print_moves:
+                    print(output_str)
                 hand_vals = [c.get_value() for c in current_player.get_hand()]
                 self.record_move(index, description=output_str, hand=hand_vals)
 
@@ -298,11 +324,16 @@ class Game:
         prompt_str_2 = self.deck.show_descriptions()
         prompt_str = prompt_str_1 + prompt_str_2 + '\n'
         valid_moves = list(range(2,9))
+        players_active = self.player_active_status
+        players_protected = self.protected
         request_info = RequestInfo(human_string=prompt_str,
                                    action_requested='guess',
                                    valid_moves=valid_moves,
                                    discard_pile=self.show_discard_pile()[0],
-                                   current_hand=current_player.get_hand())
+                                   current_hand=current_player.get_hand(),
+                                   players_active=players_active,
+                                   players_protected=players_protected)
+
 
         while True:
 
@@ -312,7 +343,8 @@ class Game:
             hand_vals = [c.get_value() for c in current_player.get_hand()]
             self.record_move(index, description=output_str, hand=hand_vals)
 
-            print(output_str)
+            if self.print_moves:
+                print(output_str)
 
             if index in range(2, 9):
                 return index
@@ -329,14 +361,19 @@ class Game:
         return (f"{self.players[self.current_player_index].get_name()} loses and is out of the game.")
 
     def run_logic(self, active_player_index, opponent_index, played_card_value, guessed_value=0):
+
+        result = None           # Default value for cards without an opponent. winner == 1: Player wins. 2: Opponent wins
+                                # If card played is 2(Look), the result is the Card object the opponent is holding
+
         # Quick check for all-opponents-protected scenario
         if opponent_index==-1:
-            return("All opponents protected. Nothing happens")
+            return_str = "All opponents protected. Nothing happens"
+            return(return_str,result)
 
         # Performs the actual logic behind each played card
         current_player = self.players[active_player_index]
         opponent = self.players[opponent_index]
-        current_player_card = current_player.get_hand()[0]
+        current_player_card = current_player.get_hand()[0] # This is the card the player is still holding, i.e. that wasn't played
         opponent_card = opponent.get_hand()[0]
         current_player_name = current_player.get_name()
         opponent_name = opponent.get_name()
@@ -346,50 +383,59 @@ class Game:
         if played_card_value == 1:    # Guess
             if opponent_value == guessed_value:
                 self.set_player_lose(opponent_index)
-                return (f"Correct! {opponent_name} has a card value: {opponent_value}. {opponent_name} loses and is out of the game")
+                result = 1
+                return_str = f"Correct! {opponent_name} has a card value: {opponent_value}. {opponent_name} loses and is out of the game"
             else:
-                return (f"Incorrect! {opponent_name} has a different card value. Nothing happens")
+                return_str = f"Incorrect! {opponent_name} has a different card value. Nothing happens"
 
 
         elif played_card_value == 2:  # Look
 
-            return (f"{opponent_name}'s hand is: {opponent_value} - {opponent_card.get_description()}")
+            return_str = f"{opponent_name}'s hand is: {opponent_value} - {opponent_card.get_description()}"
+            result = opponent_card
 
         elif played_card_value == 3:  # Compare
 
             if current_player_value > opponent_value:
                 self.set_player_lose(opponent_index)
-                return (f"{current_player_name} (card value: {current_player_value}) wins.\n" +
-                        f"{opponent_name} (card value: {opponent_value}) loses and is out of the game")
+                result = (1, opponent_value)
+                return_str = f"{current_player_name} (card value: {current_player_value}) wins.\n" + \
+                        f"{opponent_name} (card value: {opponent_value}) loses and is out of the game"
             elif current_player_value < opponent_value:
                 self.set_player_lose(active_player_index)
-                return (f"{opponent_name} (card value: {opponent_value}) wins.\n" +
-                        f"{current_player_name} (card value: {current_player_value}) loses and is out of the game")
+                result = (2, current_player_value)
+                return_str = f"{opponent_name} (card value: {opponent_value}) wins.\n" + \
+                        f"{current_player_name} (card value: {current_player_value}) loses and is out of the game"
             else:
-                return (f"It's a draw! Both players have card value: {opponent_value}. Nothing happens")
+                result = (0,0)
+                return_str = f"It's a draw! Both players have card value: {opponent_value}. Nothing happens"
 
         elif played_card_value == 5:  # Discard
 
             discarded_card = opponent.play_card()
             discarded_card_value = discarded_card.get_value()
+            result = discarded_card_value
+
             self.add_to_discard_pile(discarded_card)
             if discarded_card_value == 8:
                 self.set_player_lose(opponent_index)
-                return (f"{opponent_name} discards a Princess and loses this round")
-            if self.deck.is_empty():
+                return_str = f"{opponent_name} discards a Princess and loses this round"
+            elif self.deck.is_empty():
                 self.set_player_lose(opponent_index)
-                return (f"Deck is empty - {opponent_name} cannot take a new card and loses this round")
-
-            new_card = self.draw_card()
-            opponent.add_card(new_card)
-            return (f"{opponent_name} discards a card value of {discarded_card_value} and draws a new card")
+                return_str = f"Deck is empty - {opponent_name} cannot take a new card and loses this round"
+            else:
+                new_card = self.draw_card()
+                opponent.add_card(new_card)
+                return_str = f"{opponent_name} discards a card value of {discarded_card_value} and draws a new card"
 
         elif played_card_value == 6:  # Trade hands
             current_player.play_card()
             opponent.play_card()
             current_player.add_card(opponent_card)
             opponent.add_card(current_player_card)
-            return (f"{current_player_name} and {opponent_name} have traded hands")
+            return_str = f"{current_player_name} and {opponent_name} have traded hands"
+
+        return(return_str,result)
 
     def enable_protection(self, player_index):
         # Set protection to player
@@ -410,37 +456,83 @@ class Game:
         # 								If all targets are protected, do nothing. Compare guess to card value. If matched, remove player from the game.
         # 									Also: check if princess was forced to be discarded when running 5's logic
 
+        opponent_index = None    # Default value for cards without an opponent
+        guessed_value = None    # Default value for cards without a guess (i.e. 2-8)
+        result = None           # Default value for cards without an opponent (2,4,6,7).
+                                    #  winner_idx == 1: Player wins. 2: Opponent wins
+                                    #  for the 2(Look at card), result is the opponent's card value
+                                    #  Note: if a 5 is played against a Princess (8), winner_idx == 1
+        result_private = None   # Default value for viewed opponent's card when playing the 2 (Look)
+
         selection = selected_card.get_value()
+        current_player_index = self.current_player_index
+
+        # Get remaining card (hand before action - needed for summary):
+        remaining_card = self.players[self.current_player_index].get_hand()[0]
 
         if selection == 8:  # Princess - lose this round
 
-            output_str = self.set_player_lose(self.current_player_index)
+            output_str = self.set_player_lose(current_player_index)
+            result = 2 # Player actually loses here. Not really important though
 
         elif selection == 7:  # Sensei - do nothing
 
-            output_str = f"{self.players[self.current_player_index].get_name()} discards a card value of {selected_card.get_value()}. Nothing happens."
+            output_str = f"{self.players[current_player_index].get_name()} discards a card value of {selected_card.get_value()}. Nothing happens."
 
         elif selection == 4:
 
-            output_str = self.enable_protection(self.current_player_index)
+            output_str = self.enable_protection(current_player_index)
 
-        elif selection in [2, 3, 5, 6]:  # Look/Compare/Discard/Trade - pick an opponent
+        elif selection == 2:            # Look at a player's card - only the active player gets the result
 
             opponent_index = self.get_opponent_index()
-            output_str = self.run_logic(self.current_player_index, opponent_index, selection)
+            output_str, result_private = self.run_logic(current_player_index, opponent_index, selection)
+
+        elif selection in [3, 5, 6]:    # Compare/Discard/Trade - everyone can see the discarded cards
+
+            opponent_index = self.get_opponent_index()
+            output_str, result = self.run_logic(current_player_index, opponent_index, selection)
 
         elif selection == 1:  # Guard - pick an opponent and guess their hand
 
             opponent_index = self.get_opponent_index()
             guessed_value = self.get_guessed_value()
-            output_str = self.run_logic(self.current_player_index, opponent_index, selection, guessed_value)
-
+            output_str, result = self.run_logic(current_player_index, opponent_index, selection, guessed_value)
         else:
 
             output_str = (f"Error - bad value {selection} entered")
 
-        print(output_str)
-        return(output_str)
+        if result_private == None:
+            result_private = result
+
+        if self.print_moves:
+            print(output_str)
+
+        dp_list, dp_verbose = self.show_discard_pile()
+
+        # Public summary - all other players get this
+        move_summary_public = {'player_num'    : current_player_index,
+                        'card_played'   : selected_card,
+                        'remaining_card': None,                             # This is the player's remaining hand
+                        'opponent'      : opponent_index,
+                        'guessed_value' : guessed_value,
+                        'result'        : result,
+                        'discard_pile'  : dp_list
+                        }
+
+        # Private summary - only the active player gets this
+        move_summary_private = {'player_num'    : current_player_index,
+                        'card_played'   : selected_card,
+                        'remaining_card': remaining_card,
+                        'opponent'      : opponent_index,
+                        'guessed_value' : guessed_value,
+                        'result'        : result_private,
+                        'discard_pile'  : dp_list
+                        }
+
+        move_summary = {'move_summary_public' :move_summary_public,
+                        'move_summary_private':move_summary_private}
+        return(move_summary)
 
     def decide_winner(self):
         # decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
@@ -452,13 +544,23 @@ class Game:
 
         return(winners, winners_indices)
 
+    def send_updates(self, move_summary):
+        # Give the private summary one to active player, and give the public one to everyone else
+        # Note: only difference between public and private is the value of the looked-at card when playing the 2(Look)
+        player_idx = move_summary['move_summary_private']['player_num']
+        # Give private summary to current player, and public summary to all other players
+        [p.input_method.update_state(move_summary['move_summary_public'])  for p in self.players[:player_idx]]
+        self.players[player_idx].input_method.update_state(move_summary['move_summary_private'])
+        [p.input_method.update_state(move_summary['move_summary_public'])  for p in self.players[(player_idx+1):]]
+
     def play(self):
         # play:					runs the main game loop until a winner is declared. Returns winner index
 
         game_over = False
         while not game_over:
             selected_card = self.do_next_player_turn()
-            self.run_card_logic(selected_card)
+            move_summary = self.run_card_logic(selected_card)
+            self.send_updates(move_summary)
             self.advance_current_player()
             game_over = self.is_game_over()
 

@@ -25,3 +25,10 @@ class PlayLogicHardCoded:
         except StopIteration:
             print(self.name + ' input moves list exhausted!')
             return (None)
+
+
+    def update_state(self, move_summary):
+        print(f'Hard-coded AI is (not) updating state..')
+
+    def init_hand_options(self, hand, dp_list):
+        print(f'Hard-coded AI is (not) initializing hand options..')

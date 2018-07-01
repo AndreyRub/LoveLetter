@@ -58,12 +58,3 @@ class Player:
 
 
 
-# COMMENTED OUT (redundant)
-
-    # def get_first_card(self, new_card):
-    #     self.hand.append(new_card)
-
-    # def play(self,new_card):
-    #     self.hand.append(new_card)
-    #     return self.hand.pop()
-

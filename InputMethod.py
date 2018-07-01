@@ -50,3 +50,5 @@ class InputMethod():
             print(self.name + ' play logic failed! Aborting')
             return(None)
 
+    def update_state(self, move_summary):
+        return self.play_logic.update_state(move_summary)
