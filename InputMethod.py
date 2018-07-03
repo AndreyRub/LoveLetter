@@ -1,5 +1,6 @@
 import collections
 from RequestInfo import RequestInfo
+from time import sleep
 
 class InputMethod():
 # Class InputMethod:
@@ -49,6 +50,7 @@ class InputMethod():
         except StopIteration:
             print(self.name + ' play logic failed! Aborting')
             return(None)
+
 
     def update_state(self, move_summary):
         return self.play_logic.update_state(move_summary)

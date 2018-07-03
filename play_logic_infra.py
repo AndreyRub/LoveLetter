@@ -20,7 +20,12 @@ def get_active_cards_list(dp_list, hand=[]):
 
 def remove_all_cards_from_list(card_list, val):
     new_list = [c for c in card_list if c!=val]
+
+    if len(new_list)==0:
+        a=2
+
     card_list = new_list
+
 
 def remove_one_card_from_list(card_list, val):
     removed = False
@@ -30,5 +35,8 @@ def remove_one_card_from_list(card_list, val):
             removed = True
         else:
             new_list += [card_list[i]]
+
+    if len(new_list)==0:
+        a=2
 
     card_list = new_list

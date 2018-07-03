@@ -12,8 +12,8 @@ scenarios = build_scenarios()
 # scenario = scenarios['AI_3_random_1_random2'] # 3 Random AIs, 1 "Random2" AI
 # scenario = scenarios['AI_1_random2_3_random1'] # 3 Random AIs, 1 "Random2" AI
 # scenario = scenarios['AI_4_random2']         # 4 Random2 AIs
-# scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
-scenario = scenarios['human_vs_3_AI_simple_logic']         ## Human vs. 3 simple_logic AIs
+scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
+
 # scenario = scenarios['hard_coded1']         # Hard coded - need to un-comment from build_scenarios.py
 
 
@@ -59,3 +59,4 @@ for k in range(3000):
 
 print('Wins count:')
 print(list(enumerate([0]+wins_count))[1:])
+

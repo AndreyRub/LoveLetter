@@ -3,6 +3,7 @@ from Card import Card
 from Player import Player
 from RequestInfo import RequestInfo
 import random
+from time import sleep
 import play_logic_infra
 from time import time
 
@@ -58,7 +59,7 @@ class Game:
         stars = "*" * len(str) + "\n"
         return("\n" + stars + str + "\n" + stars + "\n")
 
-    def __init__(self, scenario, print_moves=False):
+    def __init__(self, scenario, print_moves=True):
 
         # Load data from scenario
         input_methods_list  = scenario.get_input_methods_list()
@@ -220,10 +221,14 @@ class Game:
             return (selected_card)
         return False
 
-    def advance_current_player(self):
+    def get_next_player_index(self):
         next_index = (self.current_player_index + 1) % self.num_of_players
         while not self.player_active_status[next_index]:
             next_index = (next_index + 1) % self.num_of_players
+        return next_index
+
+    def advance_current_player(self):
+        next_index = self.get_next_player_index()
         self.current_player_index = next_index
         self.current_turn_number += 1
 
@@ -291,6 +296,7 @@ class Game:
                                    players_active=players_active,
                                    players_protected=players_protected)
 
+
         while True:
 
             index = current_player.input_method.get_player_input(request_info)
@@ -309,6 +315,11 @@ class Game:
                         request_info.invalid_moves += [index]
                     else:
                         return (val-1)
+                print(f'aaaaaaaaaaaaa')
+                t = current_player.input_method.play_logic.next_move
+                print(f'aaaaaaaaaaaaa\nPlayers active: {players_active}\nNext move: {t}')
+            except:
+                print("Input error. Try again")
             finally:
                 pass
 

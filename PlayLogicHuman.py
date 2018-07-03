@@ -62,7 +62,7 @@ class PlayLogicHuman:
         elif card_value == 5:
             output_str += f"Card discarded has value: {result}\n"
             if result == 8:
-                output_str += f"Player #{player_num} has discarded the Princess and is out of the game.\n"
+                output_str += f"Player #{opponent_idx} has discarded the Princess and is out of the game.\n"
         else:
             output_str += f"Nothing happens"
 

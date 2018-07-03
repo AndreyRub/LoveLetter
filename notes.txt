@@ -3,44 +3,85 @@ TODO:
 
 AI: When playing the Guard (1), only choose cards that are not completely out of the game. Base this on the discard pile + AI's current hand
 
-AI: hold information about other players' actions and knowledge. For example:
-    have they played the 7?
-    Have they looked at my hand? --> danger flag.
-        If I'm holding a 1(Guard) - no danger
-        Otherwise: Play the card if possible (unless 4(handmaiden) is available. Then play the 4 - consider this)
-            If not possible (Princess) - make them the default opponent for 1(Guard) and apply 4(Handmaiden) when available
-    Do I know what they're holding?
-        Have I looked at their hand?
-        Have we swapped cards?
-            If so - make this player the current 1-target + set known card
+Action stage:
+    Initialize: look only at active, non-protected players          TODO: Yes, this is suboptimal - a non-protected player can be a threat to a protected player so taking them out is not always a good idea...
 
-    Define default target sets for each active card (1,2,3,5,6)
+    Danger flags - 1st priority:
+    Has any player looked at my hand, it's over 1, and they have another turn remaining? --> danger flag.
+        action:
+            if I know THEIR card, it's not a 1, and I have a 1 myself - play the 1 and take them out
+            if known card is 2,4 - play it
+            if known card is 3 - play it against player who has played the least 1s
+            if known card is 5,6,7 - if holding handmaiden, play it. Otherwise play the card if possible (i.e. not 5,7 / 6,7 hand).
+            if known card is 8 - play other card
+
+    Definitions:
+    most_1s_played_first = Sorted list (descending) of # of 1s played (i.e. player with MOST 1s played is best target)
+    least_1s_played_first = Sorted list (ascending) of # of 1s played (i.e. player with LEAST 1s played is best target)
+    this_is_my_last_turn = true if deck_size < number_of_players [+1 if there's at least one active 5 card in play]
+    this_is_the_last_move = true if deck_size == 0
+
+    #Tests: define IF this card should be played (used during full logic stage. Not always sufficient)
+    #3-test(N=other_card): Anyone has (1,2,...N-1)?
+    #5-test(): Anyone has 6,7,8?
+    #6-test(): anyone has 7,8?
+    #Princess-test: does anyone have a princess?
+
+    Targets - If a card is chosen, this picks the opponent (if required):
+        Result should be an ordered list of descending priority.
+    1-target:
+        Is there a player whose card is known and isn't a 1?
+            If so - make this player the current 1-target
+        If there is more than one 1-target: sort them by known card value. Append the remaining players
+        otherwise: random opponent, guess from remaining non-1 active cards
+
+    2-target:
+        most_1s_played_first
+
+    3-target(hand=current_card):
+        Do I know what they're holding AND it's lower than my hand?
+            If so - make this player the current 3-target
+        Otherwise:
+            least_1s_played_first
+
+    5-target:
+        If anyone holding the princess?             If so - make this player the current 5-target
+        If anyone holding 6 or 7?                   If so - make this player the current 5-target
+        Otherwise: avoid 1s
+            most_1s_played_first
+
+    6-target:
+        Is anyone holding 7 or 8?                   If so - make this player the current 6-target
+        Otherwise:
+            If this_is_my_last_turn: avoid 1s:
+                most_1s_played_first
+            If not this_is_my_last_turn: prefer 1s:
+                least_1s_played_first
+
 
     Full list of hands and actions (depending also on knowledge, discard pile, deck size and turn#):
     np = number of active players in game
     1-guess: If known, use it.
              Otherwise: most threatening card, based on the other card left.
-                if holding a Princess, go for the 5 or 6
-                if holding a 7: go for 8 (or a 6? depending on #turns left)
-                If holding a lower card: go for the most-likely card of a higher value
+                if I'm holding a Princess, go for the 5 or 6
+                if I'm holding a 7: go for 8 (or a 6? depending on #turns left)
+                If I'm holding a lower card: go for the most-likely card of a higher value
 
             Card                            Opponent                Notes
-    (1,1):  1                               current 1-target
-    (1,2):  if #deck>[np+#5s in play]: 2    who's played most 1s
-            otherwise: 1                    current 1-target
+    (1,1):  1                               1-target
+    (1,2):  if not this_is_my_last_turn: 2  2-target
+            otherwise: 1                    1-target
     (1,3):  1
-    (1,4):  if #deck<=np : 1
-            if #deck>np*2: 4
-            otherwise:                                              TODO: depends on remaining cards in play
+    (1,4):  if this_is_my_last_turn : 1     1-target
+            if not this_is_my_last_turn: 4
     (1,5):  1                                                       I think there's no reason to play the 5 here. Maybe against a Princess(8) in the very early stages of the game. But still
-    (1,6):  Only if opponent won't play again                       Can't give them both knowledge and a guard. (I suppose that if another player gets (3,4) and my opponent has a 4, playing the 6 is better. Too difficult to code)
-            AND 6-test(): 6
-            Otherwise: 1
+    (1,6):  this_is_the_last_move AND 6-test(): 6   6-target                   Can't give them both knowledge and a guard. (I suppose that if another player gets (3,4) and my opponent has a 4, playing the 6 is better. Too difficult to code)
+            Otherwise: 1                    1-target                TODO: needs to consider player_will_not_play_again for this
     (1,7):  1                                                       TODO: consider bluffing occasionally
     (1,8):  1 (duh)
 
-    (2,2):  2                               who's played most 1s
-    (2,3):  3-test(2): 3                    player holding 1        Kind of rare.
+    (2,2):  2                               2-target
+    (2,3):  3-test(2): 3                    3-target                Kind of rare.
             Otherwise: 2
     (2,4):  if in_danger: 4
             if #deck<=np: 2
@@ -84,10 +125,6 @@ AI: hold information about other players' actions and knowledge. For example:
 
     (7,8):  7
 
-    3-test(N): Anyone has (1,2,...N-1): return player index
-    5-test(): Anyone has 8? Return player index. Anyone has 6,7? Return player index
-    6-test(): anyone has 7,8? Return player index
-    Princess-test: does anyone have a princess? If so, return player index
 
 Done:
 Check case where last move is a 5, a player discards his card but cannot draw another one from the deck (it's empty)

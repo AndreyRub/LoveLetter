@@ -13,7 +13,7 @@ def input_human_player(name = "Human"):
 def input_computer_player_quiet(ai_type='random2', player_idx=None):
     computer_player = InputMethod(name=f"Computer - AI ({ai_type})",
                                            play_logic=PlayLogicAI(ai_type=ai_type, seed=2, player_index=player_idx),
-                                           print_request=False)
+                                           print_request=True)
     return(computer_player)
 
 def test_scenario(input_methods_list):
