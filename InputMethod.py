@@ -52,5 +52,5 @@ class InputMethod():
             return(None)
 
 
-    def update_state(self, move_summary):
-        return self.play_logic.update_state(move_summary)
+    def update_state(self, move_summary, hand=[]):
+        return self.play_logic.update_state(move_summary, hand=hand)

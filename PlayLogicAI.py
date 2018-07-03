@@ -51,7 +51,7 @@ class PlayLogicAI:
             if len(self.state['hand_options'][i]) > 1:
                 play_logic_infra.remove_one_card_from_list(self.state['hand_options'][i], card)
 
-    def update_state(self, move_summary):
+    def update_state(self, move_summary, hand = []):
         print(f'AI is updating state..')
 
         player_num              = move_summary['player_num']
@@ -64,6 +64,8 @@ class PlayLogicAI:
         guessed_value           = move_summary['guessed_value']
         result                  = move_summary['result']
         dp_list                 = move_summary['discard_pile']
+
+        my_hand = hand
 
         this_was_my_turn = self.player_index==player_num
         all_opponents_protected = opponent == -1
@@ -142,7 +144,8 @@ class PlayLogicAI:
                 temp = self.state['hand_options'][opponent]
                 self.state['hand_options'][opponent] = self.state['hand_options'][player_num]
                 self.state['hand_options'][player_num] = temp
-                self.state['knows_my_card'][player_num] = True
+                if self.player_index == opponent: # If I'm the opponent, the player knows my card
+                    self.state['knows_my_card'][player_num] = True
 
             if card_played_value == 7:
                 self.state['played_the_7'][player_num] = True # TODO: consider how to add information from the 5,7 / 6,7 rule

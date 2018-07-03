@@ -560,9 +560,9 @@ class Game:
         # Note: only difference between public and private is the value of the looked-at card when playing the 2(Look)
         player_idx = move_summary['move_summary_private']['player_num']
         # Give private summary to current player, and public summary to all other players
-        [p.input_method.update_state(move_summary['move_summary_public'])  for p in self.players[:player_idx]]
-        self.players[player_idx].input_method.update_state(move_summary['move_summary_private'])
-        [p.input_method.update_state(move_summary['move_summary_public'])  for p in self.players[(player_idx+1):]]
+        [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[:player_idx]]
+        self.players[player_idx].input_method.update_state(move_summary['move_summary_private'],self.players[player_idx].get_hand())
+        [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[(player_idx+1):]]
 
     def play(self):
         # play:					runs the main game loop until a winner is declared. Returns winner index

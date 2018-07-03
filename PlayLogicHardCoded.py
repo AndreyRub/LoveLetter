@@ -27,7 +27,7 @@ class PlayLogicHardCoded:
             return (None)
 
 
-    def update_state(self, move_summary):
+    def update_state(self, move_summary, hand = []):
         print(f'Hard-coded AI is (not) updating state..')
 
     def init_hand_options(self, hand, dp_list):

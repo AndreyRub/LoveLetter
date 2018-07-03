@@ -23,7 +23,7 @@ class PlayLogicHuman:
     def init_hand_options(self, hand, dp_list):
         print('Human is (not) initializing hand options...')
 
-    def update_state(self, move_summary):
+    def update_state(self, move_summary, hand = []):
         player_num = move_summary['player_num'] + 1
         card_played = move_summary['card_played']
         card_value = card_played.get_value()
