@@ -53,16 +53,19 @@ class PlayLogicHuman:
         elif card_value == 2 and result: # only show looked-at card if result was given to player ("private result")
             output_str += f"Player #{opponent_idx}\'s card is: [{result.get_value()} - {result.get_description()}]"
         elif card_value == 3:
-            if result[0] == 1:
+            if result is None:
+                output_str += "All players protected. Card has no effect."
+            elif result[0] == 1:
                 output_str += f"Player #{player_num} WON! Player #{opponent_idx} lost! Losing card has value: {result[1]}"
             elif result[0] == 2:
                 output_str += f"Player #{player_num} LOST! Player #{opponent_idx} won! Losing card has value: {result[1]}"
             elif result[0] == 0:
                 output_str += f"Player #{player_num} and Player #{opponent_idx} have identical cards. No change."
         elif card_value == 5:
-            output_str += f"Card discarded has value: {result}\n"
-            if result == 8:
-                output_str += f"Player #{opponent_idx} has discarded the Princess and is out of the game.\n"
+            if result is not None:
+                output_str += f"Card discarded has value: {result}\n"
+                if result == 8:
+                    output_str += f"Player #{opponent_idx} has discarded the Princess and is out of the game.\n"
         else:
             output_str += f"Nothing happens"
 
