@@ -288,26 +288,6 @@ class PlayLogicAI:
             if not everyone_is_protected:
                 a=2 # This should never happen
 
-        # most_1s_played_first = list(
-        #     sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k],reverse=True))
-        # # Remove the player index from list
-        # most_1s_played_first.pop(most_1s_played_first.index(self.player_index))
-        # # Remove any non-relevant players from list
-        # for k in most_1s_played_first:
-        #     if not players_relevant[k]: most_1s_played_first.pop(most_1s_played_first.index(k))
-        # if len(most_1s_played_first)==0:
-        #     most_1s_played_first = [-100] # This should only happen when all active players are protected
-        #
-        #
-        # least_1s_played_first = list(
-        #     sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k] ))
-        # # Remove the player index from list
-        # least_1s_played_first.pop(least_1s_played_first .index(self.player_index))
-        # # Remove any non-relevant players from list
-        # for k in least_1s_played_first :
-        #     if not players_relevant[k]: least_1s_played_first .pop(least_1s_played_first .index(k))
-        # if len(least_1s_played_first ) == 0:
-        #     least_1s_played_first = [-100]  # This should only happen when all active players are protected
 
         this_is_my_last_turn = remaining_turns_per_player[self.player_index]==0
         this_is_the_last_move = sum(num_cards_still_in_play)==1 # Remember there's one card out of the deck
