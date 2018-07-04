@@ -12,10 +12,10 @@ scenarios = build_scenarios()
 # scenario = scenarios['AI_3_random_1_random2'] # 3 Random AIs, 1 "Random2" AI
 # scenario = scenarios['AI_1_random2_3_random1'] # 3 Random AIs, 1 "Random2" AI
 # scenario = scenarios['AI_4_random2']         # 4 Random2 AIs
-# scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
+scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
 # scenario = scenarios['AI_4_simple_logic_fixed_seed_loud']         # 4 simple_logic AIs
 # scenario = scenarios['human_vs_3_AI_simple_logic']         # 4 simple_logic AIs
-scenario = scenarios['human_vs_3_AI_simple_logic_seed']         # 4 simple_logic AIs
+# scenario = scenarios['human_vs_3_AI_simple_logic_seed']         # 4 simple_logic AIs
 # scenario = scenarios['3_AI_simple_logic_vs_human']         # 4 simple_logic AIs
 # scenario = scenarios['3_AI_simple_logic_vs_human_seed']         # 4 simple_logic AIs
 
