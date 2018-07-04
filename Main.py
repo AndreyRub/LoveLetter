@@ -13,6 +13,7 @@ scenarios = build_scenarios()
 # scenario = scenarios['AI_1_random2_3_random1'] # 3 Random AIs, 1 "Random2" AI
 # scenario = scenarios['AI_4_random2']         # 4 Random2 AIs
 scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
+# scenario = scenarios['AI_4_simple_logic_fixed_seed_loud']         # 4 simple_logic AIs
 
 # scenario = scenarios['hard_coded1']         # Hard coded - need to un-comment from build_scenarios.py
 

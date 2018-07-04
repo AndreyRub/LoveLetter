@@ -66,7 +66,8 @@ class Game:
         cards_style         = scenario.get_card_style()
         deck_order          = scenario.get_deck_order()
         shuffle_mode        = scenario.get_deck_shuffle_mode()
-        num_of_players = scenario.get_num_of_players()
+        seed                = scenario.get_seed()
+        num_of_players      = scenario.get_num_of_players()
 
         if not num_of_players in range(2, 5):
             print("Number of players must be between 2 and 4")
@@ -99,10 +100,13 @@ class Game:
         self.game_record = [] # List of dicts of (turn, player, move, description)
 
         # Input a random seed (system-time based) to the random module. Can be overridden later with a different seed value
-        random.seed(time())
+        self.seed = seed
+        if not self.seed:
+            self.seed = round(time()*1000000) % 1000
+        random.seed(self.seed)
 
         # Init the deck
-        self.deck = Deck(cards_style=cards_style,deck_order=deck_order,shuffle_mode=shuffle_mode, seed=scenario.get_seed())
+        self.deck = Deck(cards_style=cards_style,deck_order=deck_order,shuffle_mode=shuffle_mode, seed=self.seed)
         self.deck_for_debug = [c.get_value() for c in self.deck.cards_]
 
         # Init discard pile
@@ -114,9 +118,10 @@ class Game:
 
         # Update each player's input_method's state with the new discard_pile information
         for player_idx in range(len(self.players)):
-            self.players[player_idx].input_method.play_logic.init_hand_options(self.players[player_idx].get_hand(),dp_list)
+            self.players[player_idx].input_method.reset_state(self.players[player_idx].get_hand(),dp_list)
 
-
+        if self.print_moves:
+            print(f"Seed value: {self.seed}")
 
     def prompt_player_for_input(self, player):
         name = player.get_name()
@@ -560,9 +565,14 @@ class Game:
         # Note: only difference between public and private is the value of the looked-at card when playing the 2(Look)
         player_idx = move_summary['move_summary_private']['player_num']
         # Give private summary to current player, and public summary to all other players
-        [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[:player_idx]]
-        self.players[player_idx].input_method.update_state(move_summary['move_summary_private'],self.players[player_idx].get_hand())
-        [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[(player_idx+1):]]
+        other_players = [self.players[i] for i in range(self.num_of_players) if self.player_active_status[i] and i!=player_idx]
+        [p.input_method.update_state(move_summary['move_summary_public'], p.get_hand()) for p in other_players]
+        if self.player_active_status[player_idx]:
+            self.players[player_idx].input_method.update_state(move_summary['move_summary_private'],self.players[player_idx].get_hand())
+
+        # [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[:player_idx]]
+        # [p.input_method.update_state(move_summary['move_summary_public'],p.get_hand())  for p in self.players[(player_idx+1):]]
+
 
     def play(self):
         # play:					runs the main game loop until a winner is declared. Returns winner index

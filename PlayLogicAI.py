@@ -20,25 +20,34 @@ class PlayLogicAI:
         self.num_of_players = num_of_players
         self.player_index = player_index
 
-        hand_options = list(range(1,9)) # List of opponent hand options. Will be overridden using discard pile and play history
+        self.reset_current_state()
 
         self.ai_type = ai_type
-        self.state = {'hand_options'     :  [hand_options]*num_of_players,   # If player's card is known, only one option remains
-                      'knows_my_card'   :   [False]*num_of_players,           # If not None, specifies which card value opponent knows I have
-                      'played_the_7'    :   [False]*num_of_players,          # Has this player played the 7 on their last turn?
-                      'number_of_1s_played' : [0]*num_of_players
-                      }
-
-        self.next_move = {'next_card' : None,
-                          'next_opponent' : None,
-                          'next_guess' : None
-                          }
+        self.reset_current_state()
 
         if self.ai_type == 'random' and seed != 0:
             random.seed(seed)
 
-    def init_hand_options(self, hand, dp_list):
+    def reset_current_state(self):
+        hand_options = list(range(1,9)) # List of opponent hand options. Will be overridden using discard pile and play history
+        self.state = {'hand_options'        :  [hand_options]*self.num_of_players,   # If player's card is known, only one option remains
+                      'knows_my_card'       :   [False]*self.num_of_players,           # If not None, specifies which card value opponent knows I have
+                      'played_the_7'        :   [False]*self.num_of_players,          # Has this player played the 7 on their last turn?
+                      'number_of_1s_played' : [0]*self.num_of_players
+                      }
+
+        self.next_move = {'next_card'     : None,
+                          'next_opponent' : None,
+                          'next_guess'    : None
+                          }
+
+    def reset_state(self, hand, dp_list):
         #     Used to initialize self.state['hand_options'] after first card is dealt and before first turn
+
+        # Start by resetting the current state (hand options, number of 1s played, etc.)
+        self.reset_current_state()
+
+        # Add the new information from the discard pile and current hand
         other_player_indices = list(range(self.num_of_players))
         other_player_indices.pop(self.player_index)
         for ind in other_player_indices:
@@ -67,8 +76,24 @@ class PlayLogicAI:
 
         my_hand = hand
 
-        this_was_my_turn = self.player_index==player_num
+        # Some helpers - was this my turn? Was I the opponent?
+        this_was_my_turn = self.player_index == player_num
+        i_was_the_opponent = self.player_index == opponent
         all_opponents_protected = opponent == -1
+
+        if len(hand) == 0:
+            a=2
+
+        # Set current player's hand to known value (this should be redundant, but isn't always true)
+        # Note: don't do this if last move was a 6(swap) - current hand is actually the opponent's hand
+        if not (i_was_the_opponent and card_played_value == 6):
+            self.state['hand_options'][self.player_index] = [hand[0].get_value()]
+        elif i_was_the_opponent and card_played_value == 6:
+            a=2
+
+        # If the card played was a 5, reset the opponent's hand options
+        if card_played_value == 5:
+            self.state['hand_options'][opponent] = play_logic_infra.get_active_cards_list(dp_list)
 
 
         if this_was_my_turn:
@@ -86,6 +111,7 @@ class PlayLogicAI:
 
             elif card_played_value == 3 and result!=1:                                # We compared cards and it was a draw
                 self.state['hand_options'][opponent] = [remaining_card_value]
+                self.state['knows_my_card'][opponent] = True
             elif card_played_value == 6:                                              # We swapped cards
                 self.state['hand_options'][opponent] = [remaining_card_value]
                 self.state['knows_my_card'][opponent] = True
@@ -113,25 +139,40 @@ class PlayLogicAI:
 
             # Card-specific knowledge:
 
-            if card_played_value == 1 and result!=1:                        # Player guessed wrong
+            # Player guessed wrong, and I wasn't the opponent
+            if card_played_value == 1 and result != 1 and not i_was_the_opponent:
+                if self.state['hand_options'][opponent] == [guessed_value]:
+                    a=2
+                    print('qqqqqq')
                 play_logic_infra.remove_all_cards_from_list(self.state['hand_options'][opponent], guessed_value)
 
-            if card_played_value == 2 and opponent==self.player_index:
+            # Player looked at my card
+            if card_played_value == 2 and i_was_the_opponent:
                 self.state['knows_my_card'][player_num] = True
 
+            # Someone played the 3 - look at the discarded card if available
             if card_played_value == 3:
                 if not isinstance(result,tuple):
                     raise TypeError("When playing the 3, result passed through move_summary should be in the form of a tuple (winner, discarded_card)")
-                elif result[0] == 1:  # Player has a higher card value than opponent
-                    for val in range(1, result[1] - 1):  # Remove all lower values from current player's list
+                elif result[0] == 1 and not this_was_my_turn:  # Player has a higher card value than opponent
+                    for val in range(1, result[1] + 1):  # Remove all lower/equal values from current player's list
                         play_logic_infra.remove_all_cards_from_list(self.state['hand_options'][player_num], val)
-                elif result[0] == 2:  # Player has a lower card value than opponent
-                    for val in range(1, result[1] - 1):  # Remove all lower values from current player's list
+                elif result[0] == 2 and not i_was_the_opponent:  # Player has a lower card value than opponent
+                    for val in range(1, result[1] + 1):  # Remove all lower/equal values from current player's list
                         play_logic_infra.remove_all_cards_from_list(self.state['hand_options'][opponent], val)
                 elif result[0] == 0:  # Player has a same card value as opponent - intersect hands and set to both players
-                    shared_hand_options = [v for v in self.state['hand_options'][opponent] if v in self.state['hand_options'][player_num]]
-                    self.state['hand_options'][opponent] = shared_hand_options
-                    self.state['hand_options'][player_num] = shared_hand_options
+                    if i_was_the_opponent:
+                        self.state['hand_options'][player_num] = [my_hand[0].get_value()]
+                        # Player now knows my card
+                        self.state['knows_my_card'][player_num] = True
+                    elif this_was_my_turn:
+                        self.state['hand_options'][opponent] = [my_hand[0].get_value()]
+                    else:
+                        shared_hand_options = [v for v in self.state['hand_options'][opponent] if v in self.state['hand_options'][player_num]]
+                        self.state['hand_options'][opponent] = shared_hand_options
+                        self.state['hand_options'][player_num] = shared_hand_options
+                        if len(shared_hand_options) == 0:
+                            a=2
 
             if card_played_value == 5:
                 self.state['hand_options'][opponent] = play_logic_infra.get_active_cards_list(dp_list)
@@ -141,11 +182,13 @@ class PlayLogicAI:
                         play_logic_infra.remove_one_card_from_list(self.state['hand_options'][i], result)
 
             if card_played_value == 6:                                  # Swap knowledge about players' hands
-                temp = self.state['hand_options'][opponent]
-                self.state['hand_options'][opponent] = self.state['hand_options'][player_num]
-                self.state['hand_options'][player_num] = temp
-                if self.player_index == opponent: # If I'm the opponent, the player knows my card
+
+                self.state['hand_options'][opponent], self.state['hand_options'][player_num] = \
+                    self.state['hand_options'][player_num], self.state['hand_options'][opponent]
+
+                if i_was_the_opponent: # If I'm the opponent, the player knows my card
                     self.state['knows_my_card'][player_num] = True
+                    self.state['hand_options'][self.player_index] = [hand[0].get_value()]
 
             if card_played_value == 7:
                 self.state['played_the_7'][player_num] = True # TODO: consider how to add information from the 5,7 / 6,7 rule
@@ -172,7 +215,7 @@ class PlayLogicAI:
 
         i_know_their_card = [players_relevant[i] and len(hand_options[i]) == 1 for i in range(self.num_of_players)]
 
-        their_card_value = [hand_options[i][0] for i in range(self.num_of_players)]
+        their_card_value = [hand_options[i][0] if i!=self.player_index else 0 for i in range(self.num_of_players)]
 
         state = self.state
 
@@ -229,14 +272,45 @@ class PlayLogicAI:
         # this_is_my_last_turn = true if deck_size < number_of_players[+1 if there's at least one active 5 card in play]
         # this_is_the_last_move = true if deck_size == 0
 
+        relevant_players_indices = [k for k in range(number_of_players) if players_relevant[k]]
         most_1s_played_first = list(
-            sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k]+100*players_relevant[k]+1000*players_active[k],reverse=True))
-        most_1s_played_first.pop(most_1s_played_first.index(self.player_index))
+            sorted(relevant_players_indices, key=lambda k: self.state['number_of_1s_played'][k],reverse=True))
+        if len(most_1s_played_first) == 0:
+            most_1s_played_first = [-100] # This should only happen when all active players are protected
+            if not everyone_is_protected:
+                a=2 # This should never happen
+
         least_1s_played_first = list(
-            sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k]-100*players_relevant[k]-1000*players_active[k] ))
-        least_1s_played_first.pop(least_1s_played_first.index(self.player_index))
+            sorted(relevant_players_indices, key=lambda k: self.state['number_of_1s_played'][k] ))
+        if len(least_1s_played_first ) == 0:
+            least_1s_played_first = [-100]  # This should only happen when all active players are protected
+            if not everyone_is_protected:
+                a=2 # This should never happen
+
+        # most_1s_played_first = list(
+        #     sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k],reverse=True))
+        # # Remove the player index from list
+        # most_1s_played_first.pop(most_1s_played_first.index(self.player_index))
+        # # Remove any non-relevant players from list
+        # for k in most_1s_played_first:
+        #     if not players_relevant[k]: most_1s_played_first.pop(most_1s_played_first.index(k))
+        # if len(most_1s_played_first)==0:
+        #     most_1s_played_first = [-100] # This should only happen when all active players are protected
+        #
+        #
+        # least_1s_played_first = list(
+        #     sorted(range(number_of_players), key=lambda k: self.state['number_of_1s_played'][k] ))
+        # # Remove the player index from list
+        # least_1s_played_first.pop(least_1s_played_first .index(self.player_index))
+        # # Remove any non-relevant players from list
+        # for k in least_1s_played_first :
+        #     if not players_relevant[k]: least_1s_played_first .pop(least_1s_played_first .index(k))
+        # if len(least_1s_played_first ) == 0:
+        #     least_1s_played_first = [-100]  # This should only happen when all active players are protected
+
         this_is_my_last_turn = remaining_turns_per_player[self.player_index]==0
         this_is_the_last_move = sum(num_cards_still_in_play)==1 # Remember there's one card out of the deck
+        one_last_move_against_one_other_player = this_is_the_last_move and sum(players_active) == 2
 
         # Tests: define IF this card should be played (used during full logic stage. Not always sufficient)
         # 3-test(N=other_card): Anyone has (1,2,...N-1)?
@@ -251,9 +325,11 @@ class PlayLogicAI:
                         for N in range(0,9)]
 
         # 5-test(): Anyone has 6,7,8? Also if threatening player has a 1
+        # TODO: If this the last turn, this effectively makes another player lose. Need to consider this as well
         test5_result = threatened_but_they_have_1 or \
                        any([players_relevant[i] and i_know_their_card[i] and their_card_value[i] in [6,7,8] for i in
-                             range(number_of_players)])
+                             range(number_of_players)]) or \
+                        one_last_move_against_one_other_player # last move, only one other player - this is a 100% win
         # 6-test(): anyone has 7,8? Also if threatening player has a 1
         test6_result = threatened_but_they_have_1 or \
                        any([players_relevant[i] and i_know_their_card[i] and their_card_value[i] in [7,8] for i in
@@ -295,10 +371,6 @@ class PlayLogicAI:
         #    2-target:
         #        most_1s_played_first
         target2 = most_1s_played_first[0]
-        if players_protected[target2]  and not everyone_is_protected:
-            temp_active = [v for v in players_active]
-            temp_active[self.player_index] = False
-            target2 = temp_active.index(True)
 
 
         #    3-target(hand=current_card):
@@ -308,7 +380,7 @@ class PlayLogicAI:
         #            least_1s_played_first
         target3 = [None] * 9
         for N in range(0,9): # 0 is just a filler
-            good_3_target = [i_know_their_card[i] and their_card_value[i]<N for i in range(number_of_players)]
+            good_3_target = [i_know_their_card[i] and their_card_value[i]<N and players_relevant[i] for i in range(number_of_players)]
             if any(good_3_target):
                 target3[N] = good_3_target.index(True)
             else:
@@ -383,7 +455,7 @@ class PlayLogicAI:
         elif action_pair == (1, 2): next_card_value = 2 if threatened_but_unable else 1 if i_am_threatened else 2 if not this_is_my_last_turn else 1
         elif action_pair == (1, 3): next_card_value = 1
         elif action_pair == (1, 4): next_card_value = 4 if threatened_but_unable else 1 if i_am_threatened else 1 if this_is_my_last_turn else 4
-        elif action_pair == (1, 5): next_card_value = 5 if threatened_but_unable else 1
+        elif action_pair == (1, 5): next_card_value = 5 if one_last_move_against_one_other_player or threatened_but_unable else 1
         elif action_pair == (1, 6): next_card_value = 6 if threatened_but_unable else 1 if i_am_threatened else 6 if this_is_the_last_move and test6_result else 1
         elif action_pair == (1, 7): next_card_value = 1
         elif action_pair == (1, 8): next_card_value = 1
@@ -440,8 +512,8 @@ class PlayLogicAI:
         self.next_move['next_opponent']  = [next_opponent]
         self.next_move['next_guess']     = [next_guess]
 
-        print(next_opponent)
-        if next_opponent and next_opponent!=-99 and not players_active[next_opponent-1]:
+        if next_opponent and next_opponent!=-99 and \
+                (not players_active[next_opponent-1] or players_protected[next_opponent-1]):
             print(f'card: {next_card} opponent: {next_opponent}  guess: {next_guess}')
 
 

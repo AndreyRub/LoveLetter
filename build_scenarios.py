@@ -10,20 +10,20 @@ def input_human_player(name = "Human"):
     input_method = InputMethod(name=name, play_logic=PlayLogicHuman(name='XXX'), print_request=False)
     return(input_method)
 
-def input_computer_player_quiet(ai_type='random2', player_idx=None):
+def input_computer_player_quiet(ai_type='random2', player_idx=None, print_request=False):
     computer_player = InputMethod(name=f"Computer - AI ({ai_type})",
                                            play_logic=PlayLogicAI(ai_type=ai_type, seed=2, player_index=player_idx),
-                                           print_request=True)
+                                           print_request=print_request)
     return(computer_player)
 
-def test_scenario(input_methods_list):
+def test_scenario(input_methods_list, seed = 0):
     scenario = GameScenario(
                             title=f"Test scenario - {len(input_methods_list)} players",
                             num_of_players=len(input_methods_list),
                             input_methods_list=input_methods_list,
                             deck_order=[],
                             deck_shuffle_mode = 'random',
-                            seed = 0,
+                            seed = seed,
                             card_style = 'Classic')
     return(scenario)
 
@@ -219,6 +219,7 @@ def build_scenarios():
     cp_ai1 = [input_computer_player_quiet(ai_type='random', player_idx=k) for k in range(4)]
     cp_ai2 = [input_computer_player_quiet(ai_type='random2', player_idx=k) for k in range(4)]
     cp_ai3 = [input_computer_player_quiet(ai_type='simple_logic', player_idx=k) for k in range(4)]
+    cp_ai3_loud = [input_computer_player_quiet(ai_type='simple_logic', player_idx=k, print_request = True) for k in range(4)]
 
     scenarios['Humans_only']            = test_scenario(hp)
     scenarios['AI_4_random']            = test_scenario(cp_ai1)
@@ -227,6 +228,7 @@ def build_scenarios():
     scenarios['AI_4_random2']           = test_scenario(cp_ai2)
     scenarios['human_vs_3_AI_random2']  = test_scenario([hp[0]] + cp_ai2[1:])
     scenarios['AI_4_simple_logic'] = test_scenario(cp_ai3)
+    scenarios['AI_4_simple_logic_fixed_seed_loud'] = test_scenario(cp_ai3_loud, seed = 28)
     scenarios['human_vs_3_AI_simple_logic'] = test_scenario([hp[0]] + cp_ai3[1:])
 
 

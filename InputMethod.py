@@ -54,3 +54,6 @@ class InputMethod():
 
     def update_state(self, move_summary, hand=[]):
         return self.play_logic.update_state(move_summary, hand=hand)
+
+    def reset_state(self, hand=[], dp_list=[]):
+        return self.play_logic.reset_state(hand=hand, dp_list=dp_list)

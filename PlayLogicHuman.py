@@ -20,7 +20,7 @@ class PlayLogicHuman:
         except:
             return (user_input) # used when input is a string (typically "d", when the human requests the discard pile)
 
-    def init_hand_options(self, hand, dp_list):
+    def reset_state(self, hand=[], dp_list=[]):
         print('Human is (not) initializing hand options...')
 
     def update_state(self, move_summary, hand = []):
