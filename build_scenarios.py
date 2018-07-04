@@ -228,8 +228,11 @@ def build_scenarios():
     scenarios['AI_4_random2']           = test_scenario(cp_ai2)
     scenarios['human_vs_3_AI_random2']  = test_scenario([hp[0]] + cp_ai2[1:])
     scenarios['AI_4_simple_logic'] = test_scenario(cp_ai3)
-    scenarios['AI_4_simple_logic_fixed_seed_loud'] = test_scenario(cp_ai3_loud, seed = 28)
+    scenarios['AI_4_simple_logic_fixed_seed_loud'] = test_scenario(cp_ai3_loud, seed = 86613)
     scenarios['human_vs_3_AI_simple_logic'] = test_scenario([hp[0]] + cp_ai3[1:])
+    scenarios['human_vs_3_AI_simple_logic_seed'] = test_scenario([hp[0]] + cp_ai3[1:], seed = 87667)
+    scenarios['3_AI_simple_logic_vs_human'] = test_scenario(cp_ai3[:3] + [hp[3]])
+    scenarios['3_AI_simple_logic_vs_human_seed'] = test_scenario(cp_ai3[:3] + [hp[3]], seed = 87667)
 
 
     return(scenarios)

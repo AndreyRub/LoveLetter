@@ -52,7 +52,7 @@ class Game:
         if all(validity):
             prompt = f"Note: you may play any card. Your choice: "
         else:
-            prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the {hand[validity.index(True)].get_value()}. Your choice: "
+            prompt = f"Note: you may only play card {validity.index(True)+1} (i.e. you must play the {hand[validity.index(True)].get_value()}). Your choice: "
         return prompt
 
     def header_prompt(str):
@@ -102,7 +102,7 @@ class Game:
         # Input a random seed (system-time based) to the random module. Can be overridden later with a different seed value
         self.seed = seed
         if not self.seed:
-            self.seed = round(time()*1000000) % 1000
+            self.seed = round(time()*1000000) % 100000
         random.seed(self.seed)
 
         # Init the deck
@@ -120,7 +120,7 @@ class Game:
         for player_idx in range(len(self.players)):
             self.players[player_idx].input_method.reset_state(self.players[player_idx].get_hand(),dp_list)
 
-        if self.print_moves:
+        # if self.print_moves:
             print(f"Seed value: {self.seed}")
 
     def prompt_player_for_input(self, player):
@@ -407,7 +407,8 @@ class Game:
 
         elif played_card_value == 2:  # Look
 
-            return_str = f"{opponent_name}'s hand is: {opponent_value} - {opponent_card.get_description()}"
+            # return_str = f"{opponent_name}'s hand is: {opponent_value} - {opponent_card.get_description()}"
+            return_str = f"{current_player_name} looks at {opponent_name}'s hand"
             result = opponent_card
 
         elif played_card_value == 3:  # Compare
@@ -553,19 +554,20 @@ class Game:
     def decide_winner(self):
         # decide_winner:			returns winner from all remaining players (highest card value wins). Returns a list, in case of a draw
 
-        remaining_players = [self.players[i] for i in range(self.num_of_players) if self.players[i].get_hand() and self.player_active_status[i]]
-        remaining_card_values = [p.get_hand()[0].get_value() for p in remaining_players]
-        winners = [remaining_players[i] for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
-        winners_indices = [i for i, x in enumerate(remaining_card_values) if x == max(remaining_card_values)]
+        remaining_players = [(i,self.players[i]) for i in range(self.num_of_players) if self.players[i].get_hand() and self.player_active_status[i]]
+        remaining_card_values = [(i,p.get_hand()[0].get_value()) for (i,p) in remaining_players]
+        highest_remaining_card = max([v[1] for v in remaining_card_values])
+        winners = [(i,self.players[i]) for i, x in remaining_card_values if x == highest_remaining_card]
 
-        return(winners, winners_indices)
+        return(winners)
 
     def send_updates(self, move_summary):
         # Give the private summary one to active player, and give the public one to everyone else
         # Note: only difference between public and private is the value of the looked-at card when playing the 2(Look)
         player_idx = move_summary['move_summary_private']['player_num']
         # Give private summary to current player, and public summary to all other players
-        other_players = [self.players[i] for i in range(self.num_of_players) if self.player_active_status[i] and i!=player_idx]
+        # other_players = [self.players[i] for i in range(self.num_of_players) if self.player_active_status[i] and i!=player_idx]
+        other_players = [self.players[i] for i in range(self.num_of_players) if i!=player_idx]
         [p.input_method.update_state(move_summary['move_summary_public'], p.get_hand()) for p in other_players]
         if self.player_active_status[player_idx]:
             self.players[player_idx].input_method.update_state(move_summary['move_summary_private'],self.players[player_idx].get_hand())

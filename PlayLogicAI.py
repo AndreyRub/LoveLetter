@@ -82,7 +82,7 @@ class PlayLogicAI:
         all_opponents_protected = opponent == -1
 
         if len(hand) == 0:
-            a=2
+            return # This means the player is inactive (lost this round)
 
         # Set current player's hand to known value (this should be redundant, but isn't always true)
         # Note: don't do this if last move was a 6(swap) - current hand is actually the opponent's hand
@@ -117,8 +117,9 @@ class PlayLogicAI:
                 self.state['knows_my_card'][opponent] = True
 
         if not this_was_my_turn:
-            # If player played his previously-known card, reset the hand options:
-            if card_played_value in self.state['hand_options'][player_num]:
+            # Reset the hand options, unless player was known to have a specific card and did not play that card:
+            if len(self.state['hand_options'][player_num]) > 1 or \
+                    card_played_value == self.state['hand_options'][player_num][0]:
                 self.state['hand_options'][player_num] = play_logic_infra.get_active_cards_list(dp_list)
 
             # Remove played card from all other players' hand options
@@ -215,7 +216,7 @@ class PlayLogicAI:
 
         i_know_their_card = [players_relevant[i] and len(hand_options[i]) == 1 for i in range(self.num_of_players)]
 
-        their_card_value = [hand_options[i][0] if i!=self.player_index else 0 for i in range(self.num_of_players)]
+        their_card_value = [hand_options[i][0] if (i!=self.player_index and players_active[i]) else 0 for i in range(self.num_of_players)]
 
         state = self.state
 
