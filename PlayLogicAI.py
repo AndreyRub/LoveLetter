@@ -88,8 +88,6 @@ class PlayLogicAI:
         # Note: don't do this if last move was a 6(swap) - current hand is actually the opponent's hand
         if not (i_was_the_opponent and card_played_value == 6):
             self.state['hand_options'][self.player_index] = [hand[0].get_value()]
-        elif i_was_the_opponent and card_played_value == 6:
-            a=2
 
         # If the card played was a 5, reset the opponent's hand options
         if card_played_value == 5:
@@ -142,9 +140,6 @@ class PlayLogicAI:
 
             # Player guessed wrong, and I wasn't the opponent
             if card_played_value == 1 and result != 1 and not i_was_the_opponent:
-                if self.state['hand_options'][opponent] == [guessed_value]:
-                    a=2
-                    print('qqqqqq')
                 play_logic_infra.remove_all_cards_from_list(self.state['hand_options'][opponent], guessed_value)
 
             # Player looked at my card
@@ -173,7 +168,7 @@ class PlayLogicAI:
                         self.state['hand_options'][opponent] = shared_hand_options
                         self.state['hand_options'][player_num] = shared_hand_options
                         if len(shared_hand_options) == 0:
-                            a=2
+                            raise ValueError(f"Error in hand option intersection between player #{player_num} and #{opponent}")
 
             if card_played_value == 5:
                 self.state['hand_options'][opponent] = play_logic_infra.get_active_cards_list(dp_list)
@@ -279,14 +274,14 @@ class PlayLogicAI:
         if len(most_1s_played_first) == 0:
             most_1s_played_first = [-100] # This should only happen when all active players are protected
             if not everyone_is_protected:
-                a=2 # This should never happen
+                raise ValueError("most_1s_played_first has length zero, but not every active player is protected")
 
         least_1s_played_first = list(
             sorted(relevant_players_indices, key=lambda k: self.state['number_of_1s_played'][k] ))
         if len(least_1s_played_first ) == 0:
             least_1s_played_first = [-100]  # This should only happen when all active players are protected
             if not everyone_is_protected:
-                a=2 # This should never happen
+                raise ValueError("least_1s_played_first has length zero, but not every active player is protected")
 
 
         this_is_my_last_turn = remaining_turns_per_player[self.player_index]==0
@@ -405,8 +400,6 @@ class PlayLogicAI:
         #                if I'm holding a Princess, go for the 5 or 6
         #                if I'm holding a 7: go for 8 (or a 6? depending on #turns left)
         #                If I'm holding a lower card: go for the most-likely card of a higher value
-        if isinstance(target1,list):
-            a=2
         if target1==-100:  # All players are protected. Shouldn't get here
             guess1 = None
         elif i_know_their_card[target1]:

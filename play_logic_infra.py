@@ -23,7 +23,7 @@ def remove_all_cards_from_list(card_list, val):
         card_list.remove(val)
 
     if len(card_list)==0:
-        a=2
+        raise ValueError("Too many card options removed - hand_options is now empty")
 
 
 def remove_one_card_from_list(card_list, val):
@@ -31,4 +31,4 @@ def remove_one_card_from_list(card_list, val):
         card_list.remove(val)
 
     if len(card_list)==0:
-        a=2
+        raise ValueError("Too many card options removed - hand_options is now empty")
