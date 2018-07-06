@@ -18,10 +18,12 @@ scenarios = build_scenarios()
 
 # CHOOSE YOUR SCENARIO (Human vs. 3 computers, or 4 computers against themselves):
 # scenario = scenarios['human_vs_3_AI_simple_logic']         # 4 simple_logic AIs
-scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
+# scenario = scenarios['AI_4_simple_logic']         # 4 simple_logic AIs
+# scenario = scenarios['AI_2_simple_logic']         # 4 simple_logic AIs
+scenario = scenarios['human_vs_1_AI_simple_logic']         # 4 simple_logic AIs
 
 
-number_of_games_to_play = 2000
+number_of_games_to_play = 5
 
 # Run multiple games (with same scenario) using AI and get statistics
 wins_count = [0]*scenario.num_of_players

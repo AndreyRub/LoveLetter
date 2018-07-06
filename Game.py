@@ -59,7 +59,7 @@ class Game:
         stars = "*" * len(str) + "\n"
         return("\n" + stars + str + "\n" + stars + "\n")
 
-    def __init__(self, scenario, print_moves=True):
+    def __init__(self, scenario, print_moves=False):
 
         # Load data from scenario
         input_methods_list  = scenario.get_input_methods_list()
